@@ -39,6 +39,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+        }
+        
+        .firebase-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-connected {
+            background-color: #27ae60;
+        }
+        
+        .status-disconnected {
+            background-color: #e74c3c;
         }
         
         .logo-container {
@@ -274,6 +295,7 @@
         
         .form-container {
             margin-top: 20px;
+            position: relative;
         }
         
         .form-title {
@@ -475,6 +497,9 @@
         <div class="header-text">
             <h1>Controle de Churn 💸</h1>
             <p>Dashboard de acompanhamento de cancelamentos e inadimplência</p>
+        </div>
+        <div class="firebase-status status-disconnected" id="firebaseStatus">
+            <i class="fas fa-plug"></i> Firebase: Desconectado
         </div>
     </header>
 
@@ -768,6 +793,66 @@
             </div>
         </div>
     </div>
+
+    <!-- Firebase App (o core do Firebase) -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // Sua configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
+            authDomain: "controle-churn.firebaseapp.com",
+            projectId: "controle-churn",
+            storageBucket: "controle-churn.firebasestorage.app",
+            messagingSenderId: "975438802283",
+            appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        
+        // Initialize Realtime Database
+        const database = getDatabase(app);
+        
+        // Função para testar a conexão com o Firebase
+        async function testFirebaseConnection() {
+            const statusElement = document.getElementById('firebaseStatus');
+            
+            try {
+                // Verificar se o Firebase está disponível
+                if (typeof database !== 'undefined') {
+                    // Tentar escrever um dado de teste
+                    const testRef = ref(database, 'connection_test');
+                    await set(testRef, {
+                        timestamp: new Date().toISOString(),
+                        message: "Teste de conexão do Controle de Churn"
+                    });
+                    
+                    // Atualizar UI com status de conectado
+                    statusElement.className = 'firebase-status status-connected';
+                    statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
+                    
+                    console.log("Conexão com Firebase estabelecida com sucesso");
+                    return true;
+                } else {
+                    throw new Error("Firebase não está disponível");
+                }
+            } catch (error) {
+                console.error("Erro na conexão com Firebase:", error);
+                
+                // Atualizar UI com status de desconectado
+                statusElement.className = 'firebase-status status-disconnected';
+                statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
+                
+                return false;
+            }
+        }
+        
+        // Testar a conexão quando a página carregar
+        document.addEventListener('DOMContentLoaded', testFirebaseConnection);
+    </script>
 
     <script>
         // Dados iniciais para as tabelas
