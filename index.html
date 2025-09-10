@@ -6,10 +6,7 @@
     <title>Controle de Churn 💸</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
+
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -862,6 +859,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
             authDomain: "controle-churn.firebaseapp.com",
+            databaseURL: "https://controle-churn-default-rtdb.firebaseio.com",
             projectId: "controle-churn",
             storageBucket: "controle-churn.firebasestorage.app",
             messagingSenderId: "975438802283",
@@ -876,6 +874,12 @@
         
         // Variável global para acessar o banco de dados
         window.firebaseDatabase = database;
+        window.ref = ref;
+        window.set = set;
+        window.get = get;
+        window.onValue = onValue;
+        window.update = update;
+        window.remove = remove;
         
         console.log("Firebase inicializado com sucesso!");
     </script>
