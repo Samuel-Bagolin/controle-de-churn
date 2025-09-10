@@ -509,6 +509,19 @@
             margin: 0 0 10px 0;
         }
         
+        .year-selector {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .year-selector select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -643,6 +656,13 @@
 
         <div id="accessorias-tab" class="tab-content">
             <h2>Acessorias - Detalhamento</h2>
+            <div class="year-selector">
+                <label for="year-select">Ano:</label>
+                <select id="year-select" onchange="changeYear()">
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="accessorias-table">
                     <thead>
@@ -661,6 +681,13 @@
 
         <div id="sittax-tab" class="tab-content">
             <h2>Sittax - Detalhamento</h2>
+            <div class="year-selector">
+                <label for="year-select-sittax">Ano:</label>
+                <select id="year-select-sittax" onchange="changeYear()">
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="sittax-table">
                     <thead>
@@ -679,6 +706,13 @@
 
         <div id="openix-tab" class="tab-content">
             <h2>Openix - Detalhamento</h2>
+            <div class="year-selector">
+                <label for="year-select-openix">Ano:</label>
+                <select id="year-select-openix" onchange="changeYear()">
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="openix-table">
                     <thead>
@@ -708,10 +742,29 @@
                         <h3 class="form-section-title">Período e Sistema</h3>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="data-periodo">Selecione o Período:</label>
+                                <label for="data-ano">Ano:</label>
+                                <select id="data-ano" required>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="data-periodo">Mês:</label>
                                 <select id="data-periodo" required>
-                                    <option value="">Selecione o período</option>
-                                    <!-- Opções serão preenchidas via JavaScript -->
+                                    <option value="">Selecione o mês</option>
+                                    <option value="Jan">Janeiro</option>
+                                    <option value="Fev">Fevereiro</option>
+                                    <option value="Mar">Março</option>
+                                    <option value="Abr">Abril</option>
+                                    <option value="Mai">Maio</option>
+                                    <option value="Jun">Junho</option>
+                                    <option value="Jul">Julho</option>
+                                    <option value="Ago">Agosto</option>
+                                    <option value="Set">Setembro</option>
+                                    <option value="Out">Outubro</option>
+                                    <option value="Nov">Novembro</option>
+                                    <option value="Dez">Dezembro</option>
                                 </select>
                             </div>
                             
@@ -921,8 +974,9 @@
         let editMode = false;
         let editingHeader = null;
         let firebaseReady = false;
+        let currentYear = 2024;
         
-        // Dados iniciais (exemplo)
+        // Dados iniciais (exemplo) - Agora com todos os meses do ano
         let initialData = {
             accessorias: {
                 'Jan-24': {
@@ -946,979 +1000,1029 @@
                     cancelados: '63',
                     churn: '3.19',
                     montanteCancelado: '87.523,45'
+                },
+                'Mar-24': {
+                    clientesAtivos: '1956',
+                    novosContratos: '42',
+                    montante: '1.087.654,32',
+                    solicitacoes: '45',
+                    confirmados: '48',
+                    automaticos: '9',
+                    cancelados: '57',
+                    churn: '2.92',
+                    montanteCancelado: '78.912,34'
+                },
+                'Abr-24': {
+                    clientesAtivos: '1932',
+                    novosContratos: '35',
+                    montante: '1.034.567,89',
+                    solicitacoes: '43',
+                    confirmados: '46',
+                    automaticos: '11',
+                    cancelados: '57',
+                    churn: '2.95',
+                    montanteCancelado: '76.543,21'
+                },
+                'Mai-24': {
+                    clientesAtivos: '1910',
+                    novosContratos: '40',
+                    montante: '1.123.456,78',
+                    solicitacoes: '47',
+                    confirmados: '50',
+                    automaticos: '8',
+                    cancelados: '58',
+                    churn: '3.04',
+                    montanteCancelado: '82.345,67'
+                },
+                'Jun-24': {
+                    clientesAtivos: '1895',
+                    novosContratos: '37',
+                    montante: '1.098.765,43',
+                    solicitacoes: '44',
+                    confirmados: '47',
+                    automaticos: '10',
+                    cancelados: '57',
+                    churn: '3.01',
+                    montanteCancelado: '79.876,54'
+                },
+                'Jul-24': {
+                    clientesAtivos: '1878',
+                    novosContratos: '41',
+                    montante: '1.156.789,01',
+                    solicitacoes: '49',
+                    confirmados: '52',
+                    automaticos: '12',
+                    cancelados: '64',
+                    churn: '3.41',
+                    montanteCancelado: '91.234,56'
+                },
+                'Ago-24': {
+                    clientesAtivos: '1856',
+                    novosContratos: '39',
+                    montante: '1.145.678,90',
+                    solicitacoes: '46',
+                    confirmados: '49',
+                    automaticos: '9',
+                    cancelados: '58',
+                    churn: '3.12',
+                    montanteCancelado: '84.567,89'
+                },
+                'Set-24': {
+                    clientesAtivos: '1837',
+                    novosContratos: '36',
+                    montante: '1.134.567,89',
+                    solicitacoes: '45',
+                    confirmados: '48',
+                    automaticos: '11',
+                    cancelados: '59',
+                    churn: '3.21',
+                    montanteCancelado: '86.789,01'
+                },
+                'Out-24': {
+                    clientesAtivos: '1815',
+                    novosContratos: '43',
+                    montante: '1.167.890,12',
+                    solicitacoes: '50',
+                    confirmados: '53',
+                    automaticos: '10',
+                    cancelados: '63',
+                    churn: '3.47',
+                    montanteCancelado: '92.345,67'
+                },
+                'Nov-24': {
+                    clientesAtivos: '1798',
+                    novosContratos: '38',
+                    montante: '1.123.456,78',
+                    solicitacoes: '47',
+                    confirmados: '50',
+                    automaticos: '8',
+                    cancelados: '58',
+                    churn: '3.23',
+                    montanteCancelado: '85.678,90'
+                },
+                'Dez-24': {
+                    clientesAtivos: '1782',
+                    novosContratos: '40',
+                    montante: '1.145.678,90',
+                    solicitacoes: '48',
+                    confirmados: '51',
+                    automaticos: '9',
+                    cancelados: '60',
+                    churn: '3.37',
+                    montanteCancelado: '88.901,23'
                 }
             },
             sittax: {
                 'Jan-24': {
                     clientesAtivos: '1003',
-                    novosContratos: '23',
-                    montante: '523.441,33',
-                    solicitacoes: '52',
-                    confirmados: '56',
-                    automaticos: '13',
-                    cancelados: '69',
-                    churn: '6.88',
-                    montanteCancelado: '36.017,12'
+                    novosContratos: '22',
+                    montante: '523.456,78',
+                    solicitacoes: '28',
+                    confirmados: '30',
+                    automaticos: '5',
+                    cancelados: '35',
+                    churn: '3.49',
+                    montanteCancelado: '45.678,90'
                 },
                 'Fev-24': {
-                    clientesAtivos: '957',
+                    clientesAtivos: '995',
+                    novosContratos: '20',
+                    montante: '512.345,67',
+                    solicitacoes: '26',
+                    confirmados: '28',
+                    automaticos: '6',
+                    cancelados: '34',
+                    churn: '3.42',
+                    montanteCancelado: '43.210,98'
+                },
+                'Mar-24': {
+                    clientesAtivos: '987',
+                    novosContratos: '18',
+                    montante: '498.765,43',
+                    solicitacoes: '24',
+                    confirmados: '26',
+                    automaticos: '4',
+                    cancelados: '30',
+                    churn: '3.04',
+                    montanteCancelado: '39.876,54'
+                },
+                'Abr-24': {
+                    clientesAtivos: '978',
                     novosContratos: '19',
-                    montante: '487.123,67',
-                    solicitacoes: '45',
-                    confirmados: '49',
-                    automaticos: '15',
-                    cancelados: '64',
-                    churn: '6.69',
-                    montanteCancelado: '32.456,78'
+                    montante: '487.654,32',
+                    solicitacoes: '25',
+                    confirmados: '27',
+                    automaticos: '5',
+                    cancelados: '32',
+                    churn: '3.27',
+                    montanteCancelado: '41.234,56'
+                },
+                'Mai-24': {
+                    clientesAtivos: '970',
+                    novosContratos: '21',
+                    montante: '512.345,67',
+                    solicitacoes: '27',
+                    confirmados: '29',
+                    automaticos: '4',
+                    cancelados: '33',
+                    churn: '3.40',
+                    montanteCancelado: '43.987,65'
+                },
+                'Jun-24': {
+                    clientesAtivos: '962',
+                    novosContratos: '17',
+                    montante: '498.765,43',
+                    solicitacoes: '23',
+                    confirmados: '25',
+                    automaticos: '5',
+                    cancelados: '30',
+                    churn: '3.12',
+                    montanteCancelado: '39.123,45'
+                },
+                'Jul-24': {
+                    clientesAtivos: '955',
+                    novosContratos: '20',
+                    montante: '523.456,78',
+                    solicitacoes: '26',
+                    confirmados: '28',
+                    automaticos: '6',
+                    cancelados: '34',
+                    churn: '3.56',
+                    montanteCancelado: '44.567,89'
+                },
+                'Ago-24': {
+                    clientesAtivos: '948',
+                    novosContratos: '18',
+                    montante: '512.345,67',
+                    solicitacoes: '24',
+                    confirmados: '26',
+                    automaticos: '5',
+                    cancelados: '31',
+                    churn: '3.27',
+                    montanteCancelado: '40.987,65'
+                },
+                'Set-24': {
+                    clientesAtivos: '941',
+                    novosContratos: '19',
+                    montante: '498.765,43',
+                    solicitacoes: '25',
+                    confirmados: '27',
+                    automaticos: '4',
+                    cancelados: '31',
+                    churn: '3.29',
+                    montanteCancelado: '40.543,21'
+                },
+                'Out-24': {
+                    clientesAtivos: '934',
+                    novosContratos: '21',
+                    montante: '523.456,78',
+                    solicitacoes: '27',
+                    confirmados: '29',
+                    automaticos: '6',
+                    cancelados: '35',
+                    churn: '3.75',
+                    montanteCancelado: '45.678,90'
+                },
+                'Nov-24': {
+                    clientesAtivos: '927',
+                    novosContratos: '17',
+                    montante: '498.765,43',
+                    solicitacoes: '23',
+                    confirmados: '25',
+                    automaticos: '5',
+                    cancelados: '30',
+                    churn: '3.24',
+                    montanteCancelado: '39.123,45'
+                },
+                'Dez-24': {
+                    clientesAtivos: '920',
+                    novosContratos: '20',
+                    montante: '512.345,67',
+                    solicitacoes: '26',
+                    confirmados: '28',
+                    automaticos: '6',
+                    cancelados: '34',
+                    churn: '3.70',
+                    montanteCancelado: '44.321,09'
                 }
             },
             openix: {
                 'Jan-24': {
                     clientesAtivos: '456',
                     novosContratos: '12',
-                    montante: '238.119,44',
-                    solicitacoes: '14',
-                    confirmados: '37',
-                    automaticos: '10',
-                    cancelados: '47',
-                    churn: '10.31',
-                    montanteCancelado: '24.534,33'
+                    montante: '234.567,89',
+                    solicitacoes: '15',
+                    confirmados: '17',
+                    automaticos: '3',
+                    cancelados: '20',
+                    churn: '4.39',
+                    montanteCancelado: '32.109,87'
                 },
                 'Fev-24': {
-                    clientesAtivos: '421',
-                    novosContratos: '8',
-                    montante: '201.567,89',
+                    clientesAtivos: '452',
+                    novosContratos: '10',
+                    montante: '228.765,43',
+                    solicitacoes: '14',
+                    confirmados: '16',
+                    automaticos: '4',
+                    cancelados: '20',
+                    churn: '4.42',
+                    montanteCancelado: '31.234,56'
+                },
+                'Mar-24': {
+                    clientesAtivos: '448',
+                    novosContratos: '11',
+                    montante: '221.098,76',
+                    solicitacoes: '13',
+                    confirmados: '15',
+                    automaticos: '3',
+                    cancelados: '18',
+                    churn: '4.02',
+                    montanteCancelado: '29.876,54'
+                },
+                'Abr-24': {
+                    clientesAtivos: '444',
+                    novosContratos: '9',
+                    montante: '215.432,10',
                     solicitacoes: '12',
-                    confirmados: '32',
-                    automaticos: '8',
-                    cancelados: '40',
-                    churn: '9.50',
-                    montanteCancelado: '19.148,92'
+                    confirmados: '14',
+                    automaticos: '4',
+                    cancelados: '18',
+                    churn: '4.05',
+                    montanteCancelado: '28.765,43'
+                },
+                'Mai-24': {
+                    clientesAtivos: '440',
+                    novosContratos: '12',
+                    montante: '228.765,43',
+                    solicitacoes: '14',
+                    confirmados: '16',
+                    automaticos: '3',
+                    cancelados: '19',
+                    churn: '4.32',
+                    montanteCancelado: '30.987,65'
+                },
+                'Jun-24': {
+                    clientesAtivos: '436',
+                    novosContratos: '10',
+                    montante: '221.098,76',
+                    solicitacoes: '13',
+                    confirmados: '15',
+                    automaticos: '4',
+                    cancelados: '19',
+                    churn: '4.36',
+                    montanteCancelado: '30.123,45'
+                },
+                'Jul-24': {
+                    clientesAtivos: '432',
+                    novosContratos: '11',
+                    montante: '234.567,89',
+                    solicitacoes: '15',
+                    confirmados: '17',
+                    automaticos: '5',
+                    cancelados: '22',
+                    churn: '5.09',
+                    montanteCancelado: '33.456,78'
+                },
+                'Ago-24': {
+                    clientesAtivos: '428',
+                    novosContratos: '9',
+                    montante: '228.765,43',
+                    solicitacoes: '14',
+                    confirmados: '16',
+                    automaticos: '4',
+                    cancelados: '20',
+                    churn: '4.67',
+                    montanteCancelado: '31.890,12'
+                },
+                'Set-24': {
+                    clientesAtivos: '424',
+                    novosContratos: '10',
+                    montante: '221.098,76',
+                    solicitacoes: '13',
+                    confirmados: '15',
+                    automaticos: '3',
+                    cancelados: '18',
+                    churn: '4.25',
+                    montanteCancelado: '29.543,21'
+                },
+                'Out-24': {
+                    clientesAtivos: '420',
+                    novosContratos: '12',
+                    montante: '234.567,89',
+                    solicitacoes: '15',
+                    confirmados: '17',
+                    automaticos: '5',
+                    cancelados: '22',
+                    churn: '5.24',
+                    montanteCancelado: '34.567,89'
+                },
+                'Nov-24': {
+                    clientesAtivos: '416',
+                    novosContratos: '10',
+                    montante: '221.098,76',
+                    solicitacoes: '13',
+                    confirmados: '15',
+                    automaticos: '4',
+                    cancelados: '19',
+                    churn: '4.57',
+                    montanteCancelado: '30.987,65'
+                },
+                'Dez-24': {
+                    clientesAtivos: '412',
+                    novosContratos: '11',
+                    montante: '228.765,43',
+                    solicitacoes: '14',
+                    confirmados: '16',
+                    automaticos: '5',
+                    cancelados: '21',
+                    churn: '5.10',
+                    montanteCancelado: '32.109,87'
                 }
             }
         };
 
-        // Aguardar inicialização do Firebase
-        window.addEventListener('firebaseReady', function() {
-            firebaseReady = true;
-            console.log('Firebase inicializado com sucesso');
+        // Inicialização quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se o Firebase foi inicializado
+            window.addEventListener('firebaseReady', function() {
+                firebaseReady = true;
+                updateFirebaseStatus('connected');
+                enableButtons();
+            });
             
-            // Habilitar botões
-            enableButtons();
+            // Configurar timeout para verificar se o Firebase não carregou
+            setTimeout(function() {
+                if (!firebaseReady) {
+                    updateFirebaseStatus('disconnected');
+                    enableButtons();
+                }
+            }, 3000);
             
-            // Ocultar aviso de configuração se as credenciais foram configuradas
-            checkFirebaseConfig();
+            // Inicializar gráficos
+            initCharts();
             
-            // Testar conexão
-            testFirebaseConnection();
+            // Inicializar tabelas
+            initTables();
+            
+            // Configurar eventos
+            setupEventListeners();
         });
 
-        // Função para habilitar botões após inicialização do Firebase
+        // Função para atualizar o status do Firebase
+        function updateFirebaseStatus(status) {
+            const statusElement = document.getElementById('firebaseStatus');
+            const configWarning = document.getElementById('configWarning');
+            
+            if (status === 'connected') {
+                statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Firebase: Conectado';
+                statusElement.className = 'firebase-status status-connected';
+                configWarning.style.display = 'none';
+            } else if (status === 'disconnected') {
+                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Firebase: Desconectado';
+                statusElement.className = 'firebase-status status-disconnected';
+                configWarning.style.display = 'block';
+            } else {
+                statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Firebase: Inicializando...';
+                statusElement.className = 'firebase-status status-loading';
+            }
+        }
+
+        // Função para habilitar botões
         function enableButtons() {
-            const buttons = ['openFormBtn', 'editTableBtn', 'manageDataBtn', 'firebaseActionsBtn'];
-            buttons.forEach(btnId => {
-                const btn = document.getElementById(btnId);
-                if (btn) {
-                    btn.disabled = false;
+            document.getElementById('openFormBtn').disabled = false;
+            document.getElementById('editTableBtn').disabled = false;
+            document.getElementById('manageDataBtn').disabled = false;
+            document.getElementById('firebaseActionsBtn').disabled = false;
+        }
+
+        // Função para inicializar gráficos
+        function initCharts() {
+            // Gráfico de Taxa de Churn por Categoria
+            const churnCtx = document.getElementById('churnChart').getContext('2d');
+            window.churnChart = new Chart(churnCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Acessorias', 'Sittax', 'Openix'],
+                    datasets: [{
+                        label: 'Taxa de Churn (%)',
+                        data: [3.21, 3.49, 4.39],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(155, 89, 182, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(155, 89, 182, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Taxa de Churn (%)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Evolução do Churn
+            const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+            window.evolutionChart = new Chart(evolutionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    datasets: [
+                        {
+                            label: 'Acessorias',
+                            data: [3.21, 3.19, 2.92, 2.95, 3.04, 3.01, 3.41, 3.12, 3.21, 3.47, 3.23, 3.37],
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Sittax',
+                            data: [3.49, 3.42, 3.04, 3.27, 3.40, 3.12, 3.56, 3.27, 3.29, 3.75, 3.24, 3.70],
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Openix',
+                            data: [4.39, 4.42, 4.02, 4.05, 4.32, 4.36, 5.09, 4.67, 4.25, 5.24, 4.57, 5.10],
+                            borderColor: 'rgba(155, 89, 182, 1)',
+                            backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Taxa de Churn (%)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Distribuição de Cancelamentos
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            window.distributionChart = new Chart(distributionCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Acessorias', 'Sittax', 'Openix'],
+                    datasets: [{
+                        data: [64, 35, 20],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(155, 89, 182, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(155, 89, 182, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + ' cancelamentos';
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
 
-        // Função para verificar se as credenciais do Firebase foram configuradas
-        function checkFirebaseConfig() {
-            // Esta função pode ser expandida para verificar se as credenciais reais foram inseridas
-            // Por enquanto, apenas oculta o aviso após um tempo
-            setTimeout(() => {
-                const warning = document.getElementById('configWarning');
-                if (warning) {
-                    warning.style.display = 'none';
-                }
-            }, 5000);
+        // Função para inicializar tabelas
+        function initTables() {
+            // Inicializar tabelas para cada sistema
+            initSystemTable('accessorias');
+            initSystemTable('sittax');
+            initSystemTable('openix');
         }
 
-        // Função para alternar entre abas
+        // Função para inicializar tabela de um sistema específico
+        function initSystemTable(system) {
+            const table = document.getElementById(`${system}-table`);
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            
+            // Limpar cabeçalho (exceto as duas primeiras colunas)
+            while (thead.children.length > 2) {
+                thead.removeChild(thead.lastChild);
+            }
+            
+            // Limpar corpo
+            tbody.innerHTML = '';
+            
+            // Obter períodos (meses) disponíveis
+            const periods = Object.keys(initialData[system]);
+            
+            // Adicionar colunas de meses ao cabeçalho
+            periods.forEach(period => {
+                const th = document.createElement('th');
+                th.textContent = period;
+                th.className = 'editable-header';
+                th.dataset.period = period;
+                th.dataset.system = system;
+                th.addEventListener('click', function() {
+                    startEditHeader(this);
+                });
+                thead.appendChild(th);
+            });
+            
+            // Definir indicadores (linhas)
+            const indicators = [
+                { id: 'clientesAtivos', label: 'Clientes Ativos (mês anterior)' },
+                { id: 'novosContratos', label: 'Novos Contratos' },
+                { id: 'montante', label: 'Montante Inventariado (R$)' },
+                { id: 'solicitacoes', label: 'Solicitações de Cancelamento' },
+                { id: 'confirmados', label: 'Cancelamentos Confirmados via CS' },
+                { id: 'automaticos', label: 'Cancelamentos Automáticos (inadimplência)' },
+                { id: 'cancelados', label: 'Clientes Cancelados e Inadimplência' },
+                { id: 'churn', label: '% Churn' },
+                { id: 'montanteCancelado', label: 'Montante Cancelado (R$)' }
+            ];
+            
+            // Adicionar linhas de dados
+            indicators.forEach(indicator => {
+                const tr = document.createElement('tr');
+                
+                // Coluna de ações
+                const actionsTd = document.createElement('td');
+                actionsTd.className = 'row-actions';
+                tr.appendChild(actionsTd);
+                
+                // Coluna do indicador
+                const indicatorTd = document.createElement('td');
+                indicatorTd.textContent = indicator.label;
+                tr.appendChild(indicatorTd);
+                
+                // Colunas de dados para cada período
+                periods.forEach(period => {
+                    const td = document.createElement('td');
+                    td.textContent = initialData[system][period][indicator.id];
+                    td.dataset.indicator = indicator.id;
+                    td.dataset.period = period;
+                    td.dataset.system = system;
+                    td.addEventListener('click', function() {
+                        startEditCell(this);
+                    });
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Função para trocar de aba
         function switchTab(tabName) {
-            // Remover classe active de todas as abas
+            // Esconder todas as abas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar a aba selecionada
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Atualizar a navegação de abas
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Adicionar classe active à aba selecionada
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-tab').classList.add('active');
+            // Encontrar a aba correspondente e ativá-la
+            const tabs = document.querySelectorAll('.tab');
+            for (let i = 0; i < tabs.length; i++) {
+                if (tabs[i].textContent.toLowerCase().includes(tabName.toLowerCase())) {
+                    tabs[i].classList.add('active');
+                    break;
+                }
+            }
         }
 
-        // Função para obter todos os períodos únicos
-        function getAllPeriods() {
-            const periods = new Set();
+        // Função para iniciar edição de cabeçalho
+        function startEditHeader(element) {
+            if (!editMode) return;
             
-            Object.keys(initialData).forEach(sistema => {
-                Object.keys(initialData[sistema]).forEach(periodo => {
-                    periods.add(periodo);
-                });
+            const oldValue = element.textContent;
+            const system = element.dataset.system;
+            
+            element.innerHTML = `
+                <input type="text" value="${oldValue}" style="width: 90%;">
+                <button class="delete-btn delete-btn-column" onclick="deletePeriod('${system}', '${oldValue}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            const input = element.querySelector('input');
+            input.focus();
+            
+            input.addEventListener('blur', function() {
+                finishEditHeader(element, input.value, oldValue);
             });
             
-            return Array.from(periods).sort();
-        }
-
-        // Função para atualizar selects de período
-        function updatePeriodSelects() {
-            const periods = getAllPeriods();
-            const selects = ['data-periodo', 'delete-period', 'rename-period-old'];
-            
-            selects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (select) {
-                    const currentValue = select.value;
-                    select.innerHTML = '<option value="">Selecione o período</option>';
-                    
-                    periods.forEach(period => {
-                        const option = document.createElement('option');
-                        option.value = period;
-                        option.textContent = period;
-                        if (period === currentValue) {
-                            option.selected = true;
-                        }
-                        select.appendChild(option);
-                    });
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
                 }
             });
         }
 
-        // Função para adicionar período
-        function addPeriod(newPeriod, sistema = 'all') {
-            // Validar formato do período
-            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
-            if (!periodRegex.test(newPeriod)) {
-                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
-                return;
-            }
+        // Função para finalizar edição de cabeçalho
+        function finishEditHeader(element, newValue, oldValue) {
+            element.textContent = newValue;
             
-            if (sistema === 'all') {
-                // Adicionar para todos os sistemas
-                Object.keys(initialData).forEach(sys => {
-                    if (!initialData[sys][newPeriod]) {
-                        initialData[sys][newPeriod] = {};
-                    }
-                });
+            // Atualizar os dados
+            const system = element.dataset.system;
+            if (initialData[system][oldValue]) {
+                initialData[system][newValue] = initialData[system][oldValue];
+                delete initialData[system][oldValue];
+                
+                // Atualizar a tabela
+                initSystemTable(system);
+            }
+        }
+
+        // Função para iniciar edição de célula
+        function startEditCell(element) {
+            if (!editMode) return;
+            
+            const oldValue = element.textContent;
+            element.innerHTML = `<input type="text" value="${oldValue}" style="width: 90%;">`;
+            
+            const input = element.querySelector('input');
+            input.focus();
+            
+            input.addEventListener('blur', function() {
+                finishEditCell(element, input.value, oldValue);
+            });
+            
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+
+        // Função para finalizar edição de célula
+        function finishEditCell(element, newValue, oldValue) {
+            element.textContent = newValue;
+            
+            // Atualizar os dados
+            const system = element.dataset.system;
+            const period = element.dataset.period;
+            const indicator = element.dataset.indicator;
+            
+            if (initialData[system] && initialData[system][period]) {
+                initialData[system][period][indicator] = newValue;
+            }
+        }
+
+        // Função para alternar modo de edição
+        function toggleEditMode() {
+            editMode = !editMode;
+            const editButton = document.getElementById('editTableBtn');
+            
+            if (editMode) {
+                editButton.textContent = 'Sair do Modo Edição';
+                editButton.classList.add('active');
             } else {
-                // Adicionar apenas para o sistema especificado
-                if (!initialData[sistema]) {
-                    initialData[sistema] = {};
-                }
-                if (!initialData[sistema][newPeriod]) {
-                    initialData[sistema][newPeriod] = {};
-                }
+                editButton.textContent = 'Editar Tabela';
+                editButton.classList.remove('active');
             }
-            
-            fillTables();
-            saveDataAndNotify();
-            alert('Período adicionado com sucesso!');
         }
 
-        // Função para excluir período
-        function deletePeriod(periodo, sistema = 'all') {
-            if (sistema === 'all') {
-                // Excluir de todos os sistemas
-                Object.keys(initialData).forEach(sys => {
-                    if (initialData[sys][periodo]) {
-                        delete initialData[sys][periodo];
-                    }
-                });
+        // Função para adicionar um novo período
+        function addNewPeriod() {
+            const newPeriod = document.getElementById('new-period').value;
+            const system = document.getElementById('add-period-system').value;
+            
+            if (!newPeriod) {
+                alert('Por favor, informe o nome do novo período.');
+                return;
+            }
+            
+            // Adicionar período aos sistemas selecionados
+            const systems = system === 'all' ? ['accessorias', 'sittax', 'openix'] : [system];
+            
+            systems.forEach(sys => {
+                if (!initialData[sys][newPeriod]) {
+                    initialData[sys][newPeriod] = {
+                        clientesAtivos: '0',
+                        novosContratos: '0',
+                        montante: '0,00',
+                        solicitacoes: '0',
+                        confirmados: '0',
+                        automaticos: '0',
+                        cancelados: '0',
+                        churn: '0.00',
+                        montanteCancelado: '0,00'
+                    };
+                }
+            });
+            
+            // Atualizar as tabelas
+            if (system === 'all') {
+                initSystemTable('accessorias');
+                initSystemTable('sittax');
+                initSystemTable('openix');
             } else {
-                // Excluir apenas do sistema especificado
-                if (initialData[sistema] && initialData[sistema][periodo]) {
-                    delete initialData[sistema][periodo];
-                }
+                initSystemTable(system);
             }
             
-            fillTables();
-            saveDataAndNotify();
-            alert('Período excluído com sucesso!');
+            // Fechar modal
+            document.getElementById('manageModal').style.display = 'none';
+            document.getElementById('new-period').value = '';
         }
 
-        // Função para renomear período
-        function renamePeriod(oldName, newName) {
-            // Validar formato do novo período
-            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
-            if (!periodRegex.test(newName)) {
-                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
+        // Função para excluir um período
+        function deletePeriod(system, period) {
+            if (!confirm(`Tem certeza que deseja excluir o período ${period} do sistema ${system}?`)) {
                 return;
             }
             
-            Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema][oldName]) {
-                    initialData[sistema][newName] = initialData[sistema][oldName];
-                    delete initialData[sistema][oldName];
-                }
-            });
-            
-            fillTables();
-            saveDataAndNotify();
-            alert('Período renomeado com sucesso!');
-        }
-
-        // Função para excluir linha
-        function deleteRow(rowIndex, sistema) {
-            // Esta função pode ser implementada conforme necessário
-            alert('Funcionalidade de exclusão de linha será implementada');
-        }
-
-        // Função para testar conexão com Firebase
-        async function testFirebaseConnection() {
-            if (!firebaseReady) {
-                console.log("Firebase ainda não está pronto");
-                return false;
-            }
-            
-            const statusElement = document.getElementById('firebaseStatus');
-            const statusText = document.getElementById('connectionStatusText');
-            
-            try {
-                // Verificar se o Firebase está disponível
-                if (typeof window.firebaseDatabase !== 'undefined') {
-                    // Tentar escrever um dado de teste
-                    const testRef = window.firebaseRef(window.firebaseDatabase, 'connection_test');
-                    await window.firebaseSet(testRef, {
-                        timestamp: new Date().toISOString(),
-                        message: "Teste de conexão do Controle de Churn"
-                    });
-                    
-                    // Atualizar UI com status de conectado
-                    statusElement.className = 'firebase-status status-connected';
-                    statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
-                    if (statusText) statusText.textContent = 'Conectado com sucesso';
-                    
-                    console.log("Conexão com Firebase estabelecida com sucesso");
-                    return true;
-                } else {
-                    throw new Error("Firebase não está disponível");
-                }
-            } catch (error) {
-                console.error("Erro na conexão com Firebase:", error);
-                
-                // Atualizar UI com status de desconectado
-                statusElement.className = 'firebase-status status-disconnected';
-                statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
-                if (statusText) statusText.textContent = 'Desconectado: ' + error.message;
-                
-                return false;
+            if (initialData[system][period]) {
+                delete initialData[system][period];
+                initSystemTable(system);
             }
         }
 
-        // Função para salvar dados no Firebase
-        async function saveDataToFirebase() {
-            if (!firebaseReady) {
-                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
-                return;
-            }
-            
-            const backupName = document.getElementById('backup-name').value || 'backup-' + new Date().toISOString().slice(0, 10);
-            
-            try {
-                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
-                await window.firebaseSet(backupRef, {
-                    timestamp: new Date().toISOString(),
-                    data: initialData
-                });
-                
-                alert('Dados salvos no Firebase com sucesso! Backup: ' + backupName);
-                loadBackupList();
-            } catch (error) {
-                console.error("Erro ao salvar dados no Firebase:", error);
-                alert('Erro ao salvar dados: ' + error.message);
-            }
-        }
-
-        // Função para carregar dados do Firebase
-        async function loadDataFromFirebase(backupName = null) {
-            if (!firebaseReady) {
-                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
-                return;
-            }
-            
-            try {
-                let backupRef;
-                
-                if (backupName) {
-                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
-                } else {
-                    // Carregar o backup mais recente
-                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
-                    const snapshot = await window.firebaseGet(backupRef);
-                    
-                    if (snapshot.exists()) {
-                        const backups = snapshot.val();
-                        const backupKeys = Object.keys(backups);
-                        
-                        if (backupKeys.length > 0) {
-                            // Encontrar o backup mais recente
-                            let latestBackup = backupKeys[0];
-                            let latestTimestamp = backups[latestBackup].timestamp;
-                            
-                            for (const key of backupKeys) {
-                                if (backups[key].timestamp > latestTimestamp) {
-                                    latestBackup = key;
-                                    latestTimestamp = backups[key].timestamp;
-                                }
-                            }
-                            
-                            backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + latestBackup);
-                        } else {
-                            throw new Error("Nenhum backup encontrado");
-                        }
-                    } else {
-                        throw new Error("Nenhum backup encontrado");
-                    }
-                }
-                
-                const snapshot = await window.firebaseGet(backupRef);
-                
-                if (snapshot.exists()) {
-                    const backupData = snapshot.val();
-                    initialData = backupData.data;
-                    
-                    alert('Dados carregados do Firebase com sucesso!');
-                    fillTables();
-                    updateCharts();
-                } else {
-                    throw new Error("Backup não encontrado");
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados do Firebase:", error);
-                alert('Erro ao carregar dados: ' + error.message);
-            }
-        }
-
-        // Função para configurar o listener em tempo real
-        function setupRealtimeListener() {
-            if (!firebaseReady) {
-                console.log("Firebase ainda não está pronto para configurar listener");
-                return;
-            }
-            
-            try {
-                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
-                
-                // Escutar por mudanças em tempo real
-                window.firebaseOnValue(dataRef, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const newData = snapshot.val();
-                        initialData = newData;
-                        fillTables();
-                        updateCharts();
-                        console.log("Dados atualizados em tempo real do Firebase");
-                    }
-                });
-                
-                console.log("Listener em tempo real configurado");
-            } catch (error) {
-                console.error("Erro ao configurar listener em tempo real:", error);
-            }
-        }
-
-        // Função para salvar dados e notificar outros dispositivos
-        async function saveDataAndNotify() {
-            if (!firebaseReady) {
-                console.log("Firebase ainda não está pronto para salvar dados");
-                return;
-            }
-            
-            try {
-                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
-                await window.firebaseSet(dataRef, initialData);
-                
-                // Também criar um backup
-                await saveDataToFirebase();
-                
-                console.log("Dados salvos e notificação enviada para outros dispositivos");
-            } catch (error) {
-                console.error("Erro ao salvar dados e notificar:", error);
-            }
-        }
-
-        // Função para carregar a lista de backups
-        async function loadBackupList() {
-            if (!firebaseReady) {
-                document.getElementById('backup-list').innerHTML = '<p>Firebase ainda não está pronto</p>';
-                return;
-            }
-            
-            try {
-                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
-                const snapshot = await window.firebaseGet(backupRef);
-                const backupList = document.getElementById('backup-list');
-                
-                if (snapshot.exists()) {
-                    const backups = snapshot.val();
-                    const backupKeys = Object.keys(backups);
-                    
-                    backupList.innerHTML = '';
-                    
-                    backupKeys.forEach(key => {
-                        const backup = backups[key];
-                        const date = new Date(backup.timestamp).toLocaleString();
-                        
-                        const backupItem = document.createElement('div');
-                        backupItem.style.padding = '8px';
-                        backupItem.style.borderBottom = '1px solid #eee';
-                        backupItem.innerHTML = `
-                            <strong>${key}</strong> (${date})
-                            <button class="btn btn-small" onclick="loadDataFromFirebase('${key}')" style="padding: 2px 5px; font-size: 12px;">
-                                <i class="fas fa-download"></i> Carregar
-                            </button>
-                            <button class="btn btn-delete" onclick="deleteBackup('${key}')" style="padding: 2px 5px; font-size: 12px;">
-                                <i class="fas fa-trash"></i> Excluir
-                            </button>
-                        `;
-                        
-                        backupList.appendChild(backupItem);
-                    });
-                } else {
-                    backupList.innerHTML = '<p>Nenhum backup encontrado</p>';
-                }
-            } catch (error) {
-                console.error("Erro ao carregar lista de backups:", error);
-                document.getElementById('backup-list').innerHTML = '<p>Erro ao carregar backups</p>';
-            }
-        }
-
-        // Função para excluir um backup
-        async function deleteBackup(backupName) {
-            if (!firebaseReady) {
-                alert('Firebase ainda não está pronto.');
-                return;
-            }
-            
-            if (confirm(`Tem certeza que deseja excluir o backup "${backupName}"?`)) {
-                try {
-                    const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
-                    await window.firebaseRemove(backupRef);
-                    
-                    alert('Backup excluído com sucesso!');
-                    loadBackupList();
-                } catch (error) {
-                    console.error("Erro ao excluir backup:", error);
-                    alert('Erro ao excluir backup: ' + error.message);
-                }
-            }
-        }
-
-        // Função para limpar todos os dados do Firebase
-        async function clearFirebaseData() {
-            if (!firebaseReady) {
-                alert('Firebase ainda não está pronto.');
-                return;
-            }
-            
-            if (confirm('Tem certeza que deseja limpar TODOS os dados do Firebase? Esta ação não pode ser desfeita.')) {
-                try {
-                    const dataRef = window.firebaseRef(window.firebaseDatabase, 'backups');
-                    await window.firebaseRemove(dataRef);
-                    
-                    alert('Dados do Firebase limpos com sucesso!');
-                    loadBackupList();
-                } catch (error) {
-                    console.error("Erro ao limpar dados do Firebase:", error);
-                    alert('Erro ao limpar dados: ' + error.message);
-                }
-            }
-        }
-
-        // Função para preencher as tabelas com dados
-        function fillTables() {
-            const sistemas = ['accessorias', 'sittax', 'openix'];
-            const periodos = getAllPeriods();
-            
-            // Atualizar selects de período
-            updatePeriodSelects();
-            
-            sistemas.forEach(sistema => {
-                const table = document.getElementById(`${sistema}-table`);
-                const thead = table.querySelector('thead');
-                const tbody = table.querySelector('tbody');
-                
-                // Limpar e reconstruir o cabeçalho
-                thead.innerHTML = '';
-                let headerHtml = '<tr><th>Ações</th><th>Indicador</th>';
-                
-                periodos.forEach(periodo => {
-                    headerHtml += `<th class="editable-header" data-period="${periodo}">
-                        ${periodo} 
-                        <button class="delete-btn delete-btn-column" data-period="${periodo}" data-system="${sistema}">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </th>`;
-                });
-                
-                headerHtml += '</tr>';
-                thead.innerHTML = headerHtml;
-                
-                // Limpar e reconstruir o corpo
-                tbody.innerHTML = '';
-                
-                // Dados para preencher a tabela
-                const rows = [
-                    { label: 'Clientes ativos (mês anterior)', key: 'clientesAtivos', format: 'number' },
-                    { label: 'Novos Contratos', key: 'novosContratos', format: 'number' },
-                    { label: 'Montante Inventariado', key: 'montante', format: 'currency' },
-                    { label: 'Solicitações de Cancelamento', key: 'solicitacoes', format: 'number' },
-                    { label: 'Cancelamentos Confirmados via CS', key: 'confirmados', format: 'number' },
-                    { label: 'Cancelamentos Automáticos (inadimplência)', key: 'automaticos', format: 'number' },
-                    { label: 'Clientes cancelados e inadimplência', key: 'cancelados', format: 'number' },
-                    { label: '% Churn', key: 'churn', format: 'percent' },
-                    { label: 'Montante Cancelado', key: 'montanteCancelado', format: 'currency' }
-                ];
-                
-                rows.forEach((row, rowIndex) => {
-                    const tr = document.createElement('tr');
-                    let html = `<td class="row-actions">
-                        <button class="action-btn delete-row-btn" data-row="${rowIndex}" data-system="${sistema}" title="Excluir linha">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>`;
-                    html += `<td>${row.label}</td>`;
-                    
-                    periodos.forEach(periodo => {
-                        const data = initialData[sistema] && initialData[sistema][periodo] ? initialData[sistema][periodo][row.key] : '';
-                        
-                        if (editMode) {
-                            // Modo de edição - criar campos de entrada
-                            if (row.format === 'currency') {
-                                html += `<td><input type="text" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0,00"></td>`;
-                            } else if (row.format === 'percent') {
-                                html += `<td><input type="number" step="0.01" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0.00"></td>`;
-                            } else {
-                                html += `<td><input type="number" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0"></td>`;
-                            }
-                        } else {
-                            // Modo de visualização - apenas exibir dados
-                            if (row.format === 'currency') {
-                                html += `<td>${data ? 'R$ ' + data : ''}</td>`;
-                            } else if (row.format === 'percent') {
-                                html += `<td>${data ? data + '%' : ''}</td>`;
-                            } else {
-                                html += `<td>${data}</td>`;
-                            }
-                        }
-                    });
-                    
-                    tr.innerHTML = html;
-                    tbody.appendChild(tr);
-                });
-            });
-            
-            // Adicionar event listeners para os cabeçalhos editáveis
-            document.querySelectorAll('.editable-header').forEach(header => {
-                header.addEventListener('click', function() {
-                    const periodo = this.getAttribute('data-period');
-                    editingHeader = periodo;
-                    
-                    const newName = prompt('Editar período:', periodo);
-                    if (newName && newName.trim() !== '') {
-                        renamePeriod(periodo, newName.trim());
-                    }
-                });
-            });
-            
-            // Adicionar event listeners para os botões de exclusão de coluna
-            document.querySelectorAll('.delete-btn-column').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const periodo = this.getAttribute('data-period');
-                    const sistema = this.getAttribute('data-system');
-                    
-                    if (confirm(`Tem certeza que deseja excluir o período ${periodo} do sistema ${sistema}?`)) {
-                        deletePeriod(periodo, sistema);
-                    }
-                });
-            });
-            
-            // Adicionar event listeners para os botões de exclusão de linha
-            document.querySelectorAll('.delete-row-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const rowIndex = this.getAttribute('data-row');
-                    const sistema = this.getAttribute('data-system');
-                    
-                    if (confirm('Tem certeza que deseja excluir esta linha?')) {
-                        deleteRow(rowIndex, sistema);
-                    }
-                });
-            });
-        }
-
-        // Dados dos gráficos
-        const churnData = {
-            labels: ['Acessorias', 'Sittax', 'Openix'],
-            datasets: [{
-                label: 'Taxa de Churn (%)',
-                data: [3.21, 6.88, 10.31],
-                backgroundColor: [
-                    'rgba(52, 152, 219, 0.7)',
-                    'rgba(46, 204, 113, 0.7)',
-                    'rgba(155, 89, 182, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(52, 152, 219, 1)',
-                    'rgba(46, 204, 113, 1)',
-                    'rgba(155, 89, 182, 1)'
-                ],
-                borderWidth: 2
-            }]
-        };
-
-        const evolutionConfig = {
-            type: 'line',
-            data: {
-                labels: ['Jan-24', 'Fev-24', 'Mar-24', 'Abr-24', 'Mai-24'],
-                datasets: [
-                    {
-                        label: 'Acessorias',
-                        data: [3.21, 3.19, 2.95, 3.12, 2.87],
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Sittax',
-                        data: [6.88, 6.69, 7.12, 6.45, 6.78],
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Openix',
-                        data: [10.31, 9.50, 11.23, 9.87, 10.45],
-                        borderColor: 'rgba(155, 89, 182, 1)',
-                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                        tension: 0.4
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Taxa de Churn (%)'
-                        }
-                    }
-                }
-            }
-        };
-
-        const distributionConfig = {
-            type: 'bar',
-            data: {
-                labels: ['Solicitações', 'Confirmados CS', 'Automáticos'],
-                datasets: [
-                    {
-                        label: 'Acessorias',
-                        data: [52, 54, 10],
-                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                    },
-                    {
-                        label: 'Sittax',
-                        data: [52, 56, 13],
-                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                    },
-                    {
-                        label: 'Openix',
-                        data: [14, 37, 10],
-                        backgroundColor: 'rgba(155, 89, 182, 0.7)',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantidade'
-                        }
-                    }
-                }
-            }
-        };
-
-        // Configurações dos gráficos
-        const churnConfig = {
-            type: 'bar',
-            data: churnData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Taxa de Churn (%)'
-                        }
-                    }
-                }
-            }
-        };
-
-        // Função para atualizar gráficos
-        function updateCharts() {
-            // Esta função seria implementada para atualizar os gráficos com os novos dados
-            console.log("Gráficos atualizados");
-        }
-
-        // Inicializar a aplicação quando a página carregar
-        window.onload = async function() {
-            // Aguardar Firebase estar pronto
-            if (firebaseReady) {
-                await initializeApp();
-            } else {
-                window.addEventListener('firebaseReady', initializeApp);
-            }
-        };
-
-        async function initializeApp() {
-            // Testar conexão com Firebase
-            await testFirebaseConnection();
-            
-            // Configurar listener em tempo real
-            setupRealtimeListener();
-            
-            // Tentar carregar dados do Firebase
-            try {
-                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
-                const snapshot = await window.firebaseGet(dataRef);
-                
-                if (snapshot.exists()) {
-                    initialData = snapshot.val();
-                    console.log("Dados carregados do Firebase");
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados do Firebase:", error);
-            }
-            
-            // Preencher as tabelas com dados
-            fillTables();
-            
-            // Inicializar gráficos
-            new Chart(document.getElementById('churnChart'), churnConfig);
-            new Chart(document.getElementById('evolutionChart'), evolutionConfig);
-            new Chart(document.getElementById('distributionChart'), distributionConfig);
-            
-            // Configurar modais e eventos
-            setupModals();
-            setupEventListeners();
-        }
-
-        function setupModals() {
-            // Configurar modal do formulário
-            const modal = document.getElementById("formModal");
-            const openBtn = document.getElementById("openFormBtn");
-            const closeBtn = document.getElementById("closeFormBtn");
-            const span = modal.querySelector(".close");
-            
-            openBtn.onclick = function() {
-                modal.style.display = "block";
-            }
-            
-            span.onclick = function() {
-                modal.style.display = "none";
-            }
-            
-            closeBtn.onclick = function() {
-                modal.style.display = "none";
-            }
-            
-            // Configurar modal de gerenciamento
-            const manageModal = document.getElementById("manageModal");
-            const manageBtn = document.getElementById("manageDataBtn");
-            const manageClose = manageModal.querySelector(".close");
-            
-            manageBtn.onclick = function() {
-                manageModal.style.display = "block";
-            }
-            
-            manageClose.onclick = function() {
-                manageModal.style.display = "none";
-            }
-            
-            // Configurar modal do Firebase
-            const firebaseModal = document.getElementById("firebaseModal");
-            const firebaseBtn = document.getElementById("firebaseActionsBtn");
-            const firebaseClose = firebaseModal.querySelector(".close");
-            
-            firebaseBtn.onclick = function() {
-                firebaseModal.style.display = "block";
-                loadBackupList();
-            }
-            
-            firebaseClose.onclick = function() {
-                firebaseModal.style.display = "none";
-            }
-            
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-                if (event.target == manageModal) {
-                    manageModal.style.display = "none";
-                }
-                if (event.target == firebaseModal) {
-                    firebaseModal.style.display = "none";
-                }
-            }
-        }
-
+        // Função para configurar event listeners
         function setupEventListeners() {
-            // Adicionar evento de submit ao formulário
+            // Modal do formulário
+            const formModal = document.getElementById('formModal');
+            const openFormBtn = document.getElementById('openFormBtn');
+            const closeFormBtn = document.getElementById('closeFormBtn');
+            const closeFormModal = formModal.querySelector('.close');
+            
+            openFormBtn.addEventListener('click', function() {
+                formModal.style.display = 'block';
+            });
+            
+            closeFormBtn.addEventListener('click', function() {
+                formModal.style.display = 'none';
+            });
+            
+            closeFormModal.addEventListener('click', function() {
+                formModal.style.display = 'none';
+            });
+            
+            // Modal de gerenciamento
+            const manageModal = document.getElementById('manageModal');
+            const manageDataBtn = document.getElementById('manageDataBtn');
+            const closeManageModal = manageModal.querySelector('.close');
+            
+            manageDataBtn.addEventListener('click', function() {
+                manageModal.style.display = 'block';
+            });
+            
+            closeManageModal.addEventListener('click', function() {
+                manageModal.style.display = 'none';
+            });
+            
+            // Modal do Firebase
+            const firebaseModal = document.getElementById('firebaseModal');
+            const firebaseActionsBtn = document.getElementById('firebaseActionsBtn');
+            const closeFirebaseModal = firebaseModal.querySelector('.close');
+            
+            firebaseActionsBtn.addEventListener('click', function() {
+                firebaseModal.style.display = 'block';
+            });
+            
+            closeFirebaseModal.addEventListener('click', function() {
+                firebaseModal.style.display = 'none';
+            });
+            
+            // Botão de edição
+            document.getElementById('editTableBtn').addEventListener('click', toggleEditMode);
+            
+            // Botões de gerenciamento
+            document.getElementById('addPeriodBtn').addEventListener('click', addNewPeriod);
+            
+            // Formulário de dados
             document.getElementById('data-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                
-                const periodo = document.getElementById('data-periodo').value;
-                const sistema = document.getElementById('data-sistema').value;
-                
-                // Coletar dados do formulário
-                const formData = {
-                    clientesAtivos: document.getElementById('data-clientes-ativos').value,
-                    novosContratos: document.getElementById('data-novos-contratos').value,
-                    montante: document.getElementById('data-montante').value,
-                    solicitacoes: document.getElementById('data-solicitacoes').value,
-                    confirmados: document.getElementById('data-confirmados').value,
-                    automaticos: document.getElementById('data-automaticos').value,
-                    cancelados: document.getElementById('data-cancelados').value,
-                    churn: document.getElementById('data-churn').value,
-                    montanteCancelado: document.getElementById('data-montante-cancelado').value
-                };
-                
-                // Adicionar dados ao objeto initialData
-                if (!initialData[sistema]) {
-                    initialData[sistema] = {};
-                }
-                
-                initialData[sistema][periodo] = formData;
-                
-                // Atualizar a tabela correspondente
-                fillTables();
-                
-                // Salvar no Firebase e notificar outros dispositivos
-                saveDataAndNotify();
-                
-                alert('Dados salvos com sucesso!');
-                document.getElementById("formModal").style.display = "none";
-                
-                // Limpar formulário
-                document.getElementById('data-form').reset();
+                saveFormData();
             });
             
-            // Configurar botão de edição
-            const editBtn = document.getElementById("editTableBtn");
-            editBtn.addEventListener('click', function() {
-                editMode = !editMode;
-                
-                if (editMode) {
-                    editBtn.textContent = 'Salvar Edições';
-                    editBtn.style.backgroundColor = '#27ae60';
-                } else {
-                    editBtn.textContent = 'Editar Tabela';
-                    editBtn.style.backgroundColor = '#f39c12';
-                    
-                    // Salvar alterações feitas nos campos de edição
-                    const editFields = document.querySelectorAll('.editable');
-                    editFields.forEach(field => {
-                        const sistema = field.getAttribute('data-sistema');
-                        const periodo = field.getAttribute('data-periodo');
-                        const key = field.getAttribute('data-key');
-                        const value = field.value;
-                        
-                        if (!initialData[sistema][periodo]) {
-                            initialData[sistema][periodo] = {};
-                        }
-                        
-                        initialData[sistema][periodo][key] = value;
-                    });
-                    
-                    // Salvar no Firebase e notificar outros dispositivos
-                    saveDataAndNotify();
-                    
-                    alert('Alterações salvas com sucesso!');
+            // Fechar modais ao clicar fora deles
+            window.addEventListener('click', function(e) {
+                if (e.target === formModal) {
+                    formModal.style.display = 'none';
                 }
-                
-                // Atualizar as tabelas
-                fillTables();
-            });
-            
-            // Configurar botões do Firebase
-            document.getElementById('saveToFirebaseBtn').addEventListener('click', saveDataToFirebase);
-            document.getElementById('loadFromFirebaseBtn').addEventListener('click', () => loadDataFromFirebase());
-            document.getElementById('clearFirebaseBtn').addEventListener('click', clearFirebaseData);
-            
-            // Configurar botão de adicionar período
-            document.getElementById('addPeriodBtn').addEventListener('click', function() {
-                const newPeriod = document.getElementById('new-period').value;
-                const sistema = document.getElementById('add-period-system').value;
-                
-                if (newPeriod) {
-                    addPeriod(newPeriod, sistema);
-                    document.getElementById('new-period').value = '';
-                } else {
-                    alert('Por favor, informe um nome para o novo período.');
+                if (e.target === manageModal) {
+                    manageModal.style.display = 'none';
                 }
-            });
-            
-            // Configurar botão de excluir período
-            document.getElementById('deletePeriodBtn').addEventListener('click', function() {
-                const periodo = document.getElementById('delete-period').value;
-                const sistema = document.getElementById('delete-period-system').value;
-                
-                if (periodo) {
-                    if (confirm(`Tem certeza que deseja excluir o período ${periodo}?`)) {
-                        deletePeriod(periodo, sistema);
-                    }
-                } else {
-                    alert('Por favor, selecione um período para excluir.');
-                }
-            });
-            
-            // Configurar botão de renomear período
-            document.getElementById('renamePeriodBtn').addEventListener('click', function() {
-                const oldName = document.getElementById('rename-period-old').value;
-                const newName = document.getElementById('rename-period-new').value;
-                const sistema = document.getElementById('rename-period-system').value;
-                
-                if (oldName && newName) {
-                    // Validar formato do novo período
-                    const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
-                    if (!periodRegex.test(newName)) {
-                        alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
-                        return;
-                    }
-                    
-                    if (sistema === 'all') {
-                        renamePeriod(oldName, newName);
-                    } else {
-                        // Para um sistema específico, precisamos fazer uma cópia manual
-                        if (initialData[sistema] && initialData[sistema][oldName]) {
-                            initialData[sistema][newName] = initialData[sistema][oldName];
-                            delete initialData[sistema][oldName];
-                            fillTables();
-                            saveDataAndNotify();
-                        }
-                    }
-                    document.getElementById('rename-period-new').value = '';
-                } else {
-                    alert('Por favor, selecione um período e informe um novo nome.');
+                if (e.target === firebaseModal) {
+                    firebaseModal.style.display = 'none';
                 }
             });
         }
+
+        // Função para salvar dados do formulário
+        function saveFormData() {
+            const ano = document.getElementById('data-ano').value;
+            const periodo = document.getElementById('data-periodo').value;
+            const sistema = document.getElementById('data-sistema').value;
+            
+            // Validar se o período já existe
+            const periodoCompleto = `${periodo}-${ano.slice(2)}`;
+            
+            // Adicionar/atualizar dados
+            if (!initialData[sistema][periodoCompleto]) {
+                initialData[sistema][periodoCompleto] = {};
+            }
+            
+            initialData[sistema][periodoCompleto] = {
+                clientesAtivos: document.getElementById('data-clientes-ativos').value,
+                novosContratos: document.getElementById('data-novos-contratos').value,
+                montante: document.getElementById('data-montante').value,
+                solicitacoes: document.getElementById('data-solicitacoes').value,
+                confirmados: document.getElementById('data-confirmados').value,
+                automaticos: document.getElementById('data-automaticos').value,
+                cancelados: document.getElementById('data-cancelados').value,
+                churn: document.getElementById('data-churn').value,
+                montanteCancelado: document.getElementById('data-montante-cancelado').value
+            };
+            
+            // Atualizar a tabela correspondente
+            initSystemTable(sistema);
+            
+            // Fechar o modal
+            document.getElementById('formModal').style.display = 'none';
+            
+            // Limpar o formulário
+            document.getElementById('data-form').reset();
+            
+            alert('Dados salvos com sucesso!');
+        }
+
+        // Função para mudar o ano exibido
+        function changeYear() {
+            // Esta função seria usada para alternar entre anos diferentes
+            // No exemplo, estamos apenas alternando entre 2023 e 2024
+            const yearSelect = document.getElementById('year-select');
+            const yearSelectSittax = document.getElementById('year-select-sittax');
+            const yearSelectOpenix = document.getElementById('year-select-openix');
+            
+            currentYear = parseInt(yearSelect.value);
+            
+            // Atualizar os selects para manter a consistência
+            yearSelectSittax.value = currentYear;
+            yearSelectOpenix.value = currentYear;
+            
+            // Em uma implementação real, aqui você carregaria os dados do ano selecionado
+            alert(`Ano alterado para ${currentYear}. Em uma implementação real, os dados seriam carregados do Firebase.`);
+        }
+
+        // Funções para manipulação do Firebase (exemplos)
+        function saveToFirebase() {
+            if (!firebaseReady) {
+                alert('Firebase não está conectado. Verifique a configuração.');
+                return;
+            }
+            
+            const backupName = document.getElementById('backup-name').value || 'backup-' + new Date().toISOString();
+            
+            // Salvar dados no Firebase
+            window.firebaseSet(window.firebaseRef(window.firebaseDatabase, `churnData/${backupName}`), initialData)
+                .then(() => {
+                    alert(`Dados salvos no Firebase com o nome: ${backupName}`);
+                    document.getElementById('firebaseModal').style.display = 'none';
+                })
+                .catch((error) => {
+                    alert('Erro ao salvar dados: ' + error.message);
+                });
+        }
+
+        function loadFromFirebase() {
+            if (!firebaseReady) {
+                alert('Firebase não está conectado. Verifique a configuração.');
+                return;
+            }
+            
+            const backupName = document.getElementById('backup-name').value || 'backup';
+            
+            // Carregar dados do Firebase
+            window.firebaseGet(window.firebaseRef(window.firebaseDatabase, `churnData/${backupName}`))
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        initialData = snapshot.val();
+                        initTables();
+                        alert(`Dados carregados do backup: ${backupName}`);
+                        document.getElementById('firebaseModal').style.display = 'none';
+                    } else {
+                        alert('Nenhum dado encontrado com esse nome.');
+                    }
+                })
+                .catch((error) => {
+                    alert('Erro ao carregar dados: ' + error.message);
+                });
+        }
+
+        function clearFirebase() {
+            if (!firebaseReady) {
+                alert('Firebase não está conectado. Verifique a configuração.');
+                return;
+            }
+            
+            if (!confirm('Tem certeza que deseja limpar todos os dados do Firebase? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            // Limpar dados do Firebase
+            window.firebaseSet(window.firebaseRef(window.firebaseDatabase, 'churnData'), null)
+                .then(() => {
+                    alert('Todos os dados do Firebase foram removidos.');
+                    document.getElementById('firebaseModal').style.display = 'none';
+                })
+                .catch((error) => {
+                    alert('Erro ao limpar dados: ' + error.message);
+                });
+        }
+
+        // Adicionar event listeners para os botões do Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('saveToFirebaseBtn').addEventListener('click', saveToFirebase);
+            document.getElementById('loadFromFirebaseBtn').addEventListener('click', loadFromFirebase);
+            document.getElementById('clearFirebaseBtn').addEventListener('click', clearFirebase);
+        });
+
+        // Expor funções globais para uso nos eventos HTML
+        window.switchTab = switchTab;
+        window.startEditHeader = startEditHeader;
+        window.deletePeriod = deletePeriod;
+        window.changeYear = changeYear;
     </script>
 </body>
 </html>
