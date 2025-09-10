@@ -6,6 +6,8 @@
     <title>Controle de Churn 💸</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"></script>
     
     <!-- Firebase SDK v9 - Importação Modular -->
     <script type="module">
@@ -442,6 +444,7 @@
         .table-container {
             overflow-x: auto;
             margin-bottom: 30px;
+            position: relative;
         }
         
         .editable {
@@ -522,6 +525,42 @@
             border: 1px solid #ddd;
         }
         
+        .drag-handle {
+            cursor: move;
+            margin-right: 5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .drag-handle:hover {
+            color: white;
+        }
+        
+        .gu-mirror {
+            position: fixed !important;
+            margin: 0 !important;
+            z-index: 9999 !important;
+            opacity: 0.8;
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
+            filter: alpha(opacity=80);
+        }
+        
+        .gu-hide {
+            display: none !important;
+        }
+        
+        .gu-unselectable {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+        
+        .gu-transit {
+            opacity: 0.2;
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
+            filter: alpha(opacity=20);
+        }
+        
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -588,7 +627,7 @@
         <div class="config-warning" id="configWarning">
             <h4><i class="fas fa-exclamation-triangle"></i> Configuração Necessária</h4>
             <p>Para que o Firebase funcione corretamente, você precisa substituir as credenciais no código JavaScript. 
-            Procure por "SUA_API_KEY_AQUI" e substitua pelas suas credenciais do Firebase.</p>
+            Procure por "SUA_API_KEY_AQUI" et substitua pelas suas credenciais do Firebase.</p>
         </div>
         
         <div class="button-group">
@@ -975,7 +1014,14 @@
         let editingHeader = null;
         let firebaseReady = false;
         let currentYear = 2024;
+        let dragulaInstance = null;
         
+        // Mapeamento de meses para ordenação
+        const monthOrder = {
+            'Jan': 1, 'Fev': 2, 'Mar': 3, 'Abr': 4, 'Mai': 5, 'Jun': 6,
+            'Jul': 7, 'Ago': 8, 'Set': 9, 'Out': 10, 'Nov': 11, 'Dez': 12
+        };
+
         // Dados iniciais (exemplo) - Agora com todos os meses do ano
         let initialData = {
             accessorias: {
@@ -1407,7 +1453,72 @@
             
             // Configurar eventos
             setupEventListeners();
+            
+            // Inicializar funcionalidade de arrastar colunas
+            initColumnDragging();
         });
+
+        // Função para inicializar o arrastar de colunas
+        function initColumnDragging() {
+            // Inicializar dragula para as colunas das tabelas
+            const tables = ['accessorias-table', 'sittax-table', 'openix-table'];
+            
+            tables.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    const thead = table.querySelector('thead');
+                    const tbody = table.querySelector('tbody');
+                    
+                    // Configurar dragula para o cabeçalho
+                    dragulaInstance = dragula([thead], {
+                        moves: function (el, container, handle) {
+                            return handle.classList.contains('drag-handle');
+                        },
+                        accepts: function (el, target, source, sibling) {
+                            // Permitir reordenar apenas as colunas de meses (não as primeiras duas colunas)
+                            return sibling !== thead.firstChild && sibling !== thead.firstChild.nextSibling;
+                        }
+                    });
+                    
+                    // Quando uma coluna é solta, atualizar todas as linhas
+                    dragulaInstance.on('drop', function (el, target, source, sibling) {
+                        const columnIndex = Array.from(thead.rows[0].cells).indexOf(el);
+                        
+                        // Reordenar as colunas em todas as linhas do corpo
+                        const rows = tbody.rows;
+                        for (let i = 0; i < rows.length; i++) {
+                            const cell = rows[i].cells[columnIndex];
+                            const newPosition = Array.from(thead.rows[0].cells).indexOf(sibling);
+                            
+                            if (newPosition > -1) {
+                                if (newPosition < columnIndex) {
+                                    rows[i].insertBefore(cell, rows[i].cells[newPosition]);
+                                } else {
+                                    rows[i].insertBefore(cell, rows[i].cells[newPosition].nextSibling);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Função para ordenar os meses corretamente
+        function sortMonths(periods) {
+            return periods.sort((a, b) => {
+                // Extrair mês e ano dos períodos
+                const [monthA, yearA] = a.split('-');
+                const [monthB, yearB] = b.split('-');
+                
+                // Comparar anos primeiro
+                if (yearA !== yearB) {
+                    return parseInt(yearA) - parseInt(yearB);
+                }
+                
+                // Se o ano for o mesmo, comparar meses
+                return monthOrder[monthA] - monthOrder[monthB];
+            });
+        }
 
         // Função para atualizar o status do Firebase
         function updateFirebaseStatus(status) {
@@ -1585,19 +1696,41 @@
             // Limpar corpo
             tbody.innerHTML = '';
             
-            // Obter períodos (meses) disponíveis
+            // Obter períodos (meses) disponíveis e ordená-los
             const periods = Object.keys(initialData[system]);
+            const sortedPeriods = sortMonths(periods);
             
-            // Adicionar colunas de meses ao cabeçalho
-            periods.forEach(period => {
+            // Adicionar colunas de meses ao cabeçalho (ordenados)
+            sortedPeriods.forEach(period => {
                 const th = document.createElement('th');
-                th.textContent = period;
+                
+                // Adicionar alça de arrastar
+                const dragHandle = document.createElement('span');
+                dragHandle.className = 'drag-handle';
+                dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+                
+                th.appendChild(dragHandle);
+                th.appendChild(document.createTextNode(period));
+                
                 th.className = 'editable-header';
                 th.dataset.period = period;
                 th.dataset.system = system;
-                th.addEventListener('click', function() {
-                    startEditHeader(this);
+                th.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('drag-handle') && !e.target.closest('.drag-handle')) {
+                        startEditHeader(this);
+                    }
                 });
+                
+                // Adicionar botão de exclusão
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn delete-btn-column';
+                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deletePeriod(system, period);
+                };
+                
+                th.appendChild(deleteBtn);
                 thead.appendChild(th);
             });
             
@@ -1621,6 +1754,18 @@
                 // Coluna de ações
                 const actionsTd = document.createElement('td');
                 actionsTd.className = 'row-actions';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-btn delete-row-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = 'Excluir linha';
+                deleteBtn.onclick = () => {
+                    if (confirm('Tem certeza que deseja excluir esta linha?')) {
+                        // Implementar exclusão da linha se necessário
+                    }
+                };
+                
+                actionsTd.appendChild(deleteBtn);
                 tr.appendChild(actionsTd);
                 
                 // Coluna do indicador
@@ -1628,10 +1773,10 @@
                 indicatorTd.textContent = indicator.label;
                 tr.appendChild(indicatorTd);
                 
-                // Colunas de dados para cada período
-                periods.forEach(period => {
+                // Colunas de dados para cada período (ordenados)
+                sortedPeriods.forEach(period => {
                     const td = document.createElement('td');
-                    td.textContent = initialData[system][period][indicator.id];
+                    td.textContent = initialData[system][period][indicator.id] || '-';
                     td.dataset.indicator = indicator.id;
                     td.dataset.period = period;
                     td.dataset.system = system;
@@ -1668,6 +1813,14 @@
                     break;
                 }
             }
+            
+            // Reinicializar o arrastar de colunas para a tabela ativa
+            setTimeout(() => {
+                if (dragulaInstance) {
+                    dragulaInstance.destroy();
+                }
+                initColumnDragging();
+            }, 100);
         }
 
         // Função para iniciar edição de cabeçalho
@@ -1678,9 +1831,10 @@
             const system = element.dataset.system;
             
             element.innerHTML = `
-                <input type="text" value="${oldValue}" style="width: 90%;">
+                <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+                <input type="text" value="${oldValue}" style="width: 70%;">
                 <button class="delete-btn delete-btn-column" onclick="deletePeriod('${system}', '${oldValue}')">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-times"></i>
                 </button>
             `;
             
@@ -1769,6 +1923,13 @@
             
             if (!newPeriod) {
                 alert('Por favor, informe o nome do novo período.');
+                return;
+            }
+            
+            // Validar formato do período
+            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+            if (!periodRegex.test(newPeriod)) {
+                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
                 return;
             }
             
