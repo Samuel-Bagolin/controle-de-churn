@@ -6,6 +6,44 @@
     <title>Controle de Churn 💸</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK v9 - Importação Modular -->
+    <script type="module">
+        // Importar as funções necessárias do Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, remove, child } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+
+        // Configuração do Firebase - SUBSTITUA PELAS SUAS CREDENCIAIS
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY_AQUI",
+            authDomain: "controle-churn.firebaseapp.com",
+            databaseURL: "https://controle-churn-default-rtdb.firebaseio.com/",
+            projectId: "controle-churn",
+            storageBucket: "controle-churn.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID_AQUI",
+            appId: "SEU_APP_ID_AQUI"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Tornar as funções do Firebase disponíveis globalmente
+        window.firebaseDatabase = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseRemove = remove;
+        window.firebaseChild = child;
+        
+        // Sinalizar que o Firebase foi inicializado
+        window.firebaseInitialized = true;
+        
+        // Disparar evento personalizado quando Firebase estiver pronto
+        window.dispatchEvent(new Event('firebaseReady'));
+    </script>
+    
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -60,6 +98,10 @@
         
         .status-disconnected {
             background-color: #e74c3c;
+        }
+        
+        .status-loading {
+            background-color: #f39c12;
         }
         
         .logo-container {
@@ -230,6 +272,11 @@
         
         .btn:hover {
             background-color: #2980b9;
+        }
+        
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
         }
         
         .btn-form {
@@ -449,6 +496,19 @@
             background-color: #c0392b;
         }
         
+        .config-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .config-warning h4 {
+            margin: 0 0 10px 0;
+        }
+        
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -505,17 +565,24 @@
             <h1>Controle de Churn 💸</h1>
             <p>Dashboard de acompanhamento de cancelamentos e inadimplência</p>
         </div>
-        <div class="firebase-status status-disconnected" id="firebaseStatus">
-            <i class="fas fa-plug"></i> Firebase: Desconectado
+        <div class="firebase-status status-loading" id="firebaseStatus">
+            <i class="fas fa-spinner fa-spin"></i> Firebase: Inicializando...
         </div>
     </header>
 
     <div class="container">
+        <!-- Aviso de Configuração -->
+        <div class="config-warning" id="configWarning">
+            <h4><i class="fas fa-exclamation-triangle"></i> Configuração Necessária</h4>
+            <p>Para que o Firebase funcione corretamente, você precisa substituir as credenciais no código JavaScript. 
+            Procure por "SUA_API_KEY_AQUI" e substitua pelas suas credenciais do Firebase.</p>
+        </div>
+        
         <div class="button-group">
-            <button class="btn btn-form" id="openFormBtn">Abrir Formulário de Dados</button>
-            <button class="btn btn-edit" id="editTableBtn">Editar Tabela</button>
-            <button class="btn btn-delete" id="manageDataBtn">Gerenciar Dados</button>
-            <button class="btn btn-firebase" id="firebaseActionsBtn">Ações Firebase</button>
+            <button class="btn btn-form" id="openFormBtn" disabled>Abrir Formulário de Dados</button>
+            <button class="btn btn-edit" id="editTableBtn" disabled>Editar Tabela</button>
+            <button class="btn btn-delete" id="manageDataBtn" disabled>Gerenciar Dados</button>
+            <button class="btn btn-firebase" id="firebaseActionsBtn" disabled>Ações Firebase</button>
         </div>
         
         <div class="tabs">
@@ -547,7 +614,7 @@
             <div class="dashboard">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="car d-title">Taxa de Churn por Categoria</h3>
+                        <h3 class="card-title">Taxa de Churn por Categoria</h3>
                     </div>
                     <div class="chart-container">
                         <canvas id="churnChart"></canvas>
@@ -840,172 +907,283 @@
                 </div>
                 
                 <div class="form-section">
-                    <h3 class="form-section-title">Backups</h3>
-                    <div id="backup-list" style="max-height: 200px; overflow-y: auto; padding: 10px; background: #f9f9f9; border-radius: 8px;">
-                        <p>Carregando backups...</p>
+                    <h3 class="form-section-title">Backups Disponíveis</h3>
+                    <div id="backup-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+                        <!-- Lista de backups será preenchida via JavaScript -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase App (o core do Firebase) -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        // Sua configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
-            authDomain: "controle-churn.firebaseapp.com",
-            databaseURL: "https://controle-churn-default-rtdb.firebaseio.com/",
-            projectId: "controle-churn",
-            storageBucket: "controle-churn.appspot.com",
-            messagingSenderId: "975438802283",
-            appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        
-        // Initialize Realtime Database
-        const database = getDatabase(app);
-        
-        // Variável global para acessar o banco de dados
-        window.firebaseDatabase = database;
-        
-        console.log("Firebase inicializado com sucesso!");
-    </script>
-
     <script>
-        // Dados iniciais para as tabelas
+        // Variáveis globais
+        let editMode = false;
+        let editingHeader = null;
+        let firebaseReady = false;
+        
+        // Dados iniciais (exemplo)
         let initialData = {
             accessorias: {
-                "Jul-25": {
-                    "clientesAtivos": 1994,
-                    "novosContratos": 44,
-                    "montante": "1.041.882,77",
-                    "solicitacoes": 53,
-                    "confirmados": 61,
-                    "automaticos": 11,
-                    "cancelados": 72,
-                    "churn": 3.6,
-                    "montanteCancelado": "93.146,16"
+                'Jan-24': {
+                    clientesAtivos: '1994',
+                    novosContratos: '45',
+                    montante: '1.041.882,77',
+                    solicitacoes: '52',
+                    confirmados: '54',
+                    automaticos: '10',
+                    cancelados: '64',
+                    churn: '3.21',
+                    montanteCancelado: '93.146,16'
                 },
-                "Ago-26": {
-                    "clientesAtivos": 1994,
-                    "novosContratos": 41,
-                    "montante": "1.041.882,77",
-                    "solicitacoes": 52,
-                    "confirmados": 54,
-                    "automaticos": 10,
-                    "cancelados": 64,
-                    "churn": 3.2,
-                    "montanteCancelado": ""
+                'Fev-24': {
+                    clientesAtivos: '1975',
+                    novosContratos: '38',
+                    montante: '1.125.234,89',
+                    solicitacoes: '48',
+                    confirmados: '51',
+                    automaticos: '12',
+                    cancelados: '63',
+                    churn: '3.19',
+                    montanteCancelado: '87.523,45'
                 }
             },
             sittax: {
-                "Jul-25": {
-                    "clientesAtivos": 1003,
-                    "novosContratos": 22,
-                    "montante": "992.821,30",
-                    "solicitacoes": 53,
-                    "confirmados": 55,
-                    "automaticos": 11,
-                    "cancelados": 66,
-                    "churn": 6.6,
-                    "montanteCancelado": "62.442,00"
+                'Jan-24': {
+                    clientesAtivos: '1003',
+                    novosContratos: '23',
+                    montante: '523.441,33',
+                    solicitacoes: '52',
+                    confirmados: '56',
+                    automaticos: '13',
+                    cancelados: '69',
+                    churn: '6.88',
+                    montanteCancelado: '36.017,12'
                 },
-                "Ago-26": {
-                    "clientesAtivos": 1003,
-                    "novosContratos": 12,
-                    "montante": "992.821,30",
-                    "solicitacoes": 52,
-                    "confirmados": 56,
-                    "automaticos": 13,
-                    "cancelados": 72,
-                    "churn": 7.2,
-                    "montanteCancelado": ""
+                'Fev-24': {
+                    clientesAtivos: '957',
+                    novosContratos: '19',
+                    montante: '487.123,67',
+                    solicitacoes: '45',
+                    confirmados: '49',
+                    automaticos: '15',
+                    cancelados: '64',
+                    churn: '6.69',
+                    montanteCancelado: '32.456,78'
                 }
             },
             openix: {
-                "Jul-25": {
-                    "clientesAtivos": 456,
-                    "novosContratos": 103,
-                    "montante": "360.960,00",
-                    "solicitacoes": 22,
-                    "confirmados": 33,
-                    "automaticos": 6,
-                    "cancelados": 39,
-                    "churn": 8.6,
-                    "montanteCancelado": "19.659,26"
+                'Jan-24': {
+                    clientesAtivos: '456',
+                    novosContratos: '12',
+                    montante: '238.119,44',
+                    solicitacoes: '14',
+                    confirmados: '37',
+                    automaticos: '10',
+                    cancelados: '47',
+                    churn: '10.31',
+                    montanteCancelado: '24.534,33'
                 },
-                "Ago-26": {
-                    "clientesAtivos": 456,
-                    "novosContratos": 21,
-                    "montante": "360.960,00",
-                    "solicitacoes": 14,
-                    "confirmados": 37,
-                    "automaticos": 10,
-                    "cancelados": 47,
-                    "churn": 10.3,
-                    "montanteCancelado": ""
+                'Fev-24': {
+                    clientesAtivos: '421',
+                    novosContratos: '8',
+                    montante: '201.567,89',
+                    solicitacoes: '12',
+                    confirmados: '32',
+                    automaticos: '8',
+                    cancelados: '40',
+                    churn: '9.50',
+                    montanteCancelado: '19.148,92'
                 }
             }
         };
 
-        // Mapeamento de meses para ordenação
-        const monthOrder = {
-            "Jan": 1, "Fev": 2, "Mar": 3, "Abr": 4, "Mai": 5, "Jun": 6,
-            "Jul": 7, "Ago": 8, "Set": 9, "Out": 10, "Nov": 11, "Dez": 12
-        };
+        // Aguardar inicialização do Firebase
+        window.addEventListener('firebaseReady', function() {
+            firebaseReady = true;
+            console.log('Firebase inicializado com sucesso');
+            
+            // Habilitar botões
+            enableButtons();
+            
+            // Ocultar aviso de configuração se as credenciais foram configuradas
+            checkFirebaseConfig();
+            
+            // Testar conexão
+            testFirebaseConnection();
+        });
 
-        // Variável para controlar o modo de edição
-        let editMode = false;
-        let editingHeader = null;
-
-        // Função para converter período para timestamp para ordenação
-        function periodToTimestamp(period) {
-            const [month, year] = period.split('-');
-            const monthIndex = monthOrder[month];
-            return parseInt(year) * 100 + monthIndex;
-        }
-
-        // Função para ordenar períodos por ano e mês (Jan a Dez)
-        function sortPeriods(periods) {
-            return periods.sort((a, b) => {
-                return periodToTimestamp(a) - periodToTimestamp(b);
+        // Função para habilitar botões após inicialização do Firebase
+        function enableButtons() {
+            const buttons = ['openFormBtn', 'editTableBtn', 'manageDataBtn', 'firebaseActionsBtn'];
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.disabled = false;
+                }
             });
         }
 
-        // Função para obter todos os períodos únicos de todos os sistemas
-        function getAllPeriods() {
-            const allPeriods = new Set();
-            const sistemas = ['accessorias', 'sittax', 'openix'];
+        // Função para verificar se as credenciais do Firebase foram configuradas
+        function checkFirebaseConfig() {
+            // Esta função pode ser expandida para verificar se as credenciais reais foram inseridas
+            // Por enquanto, apenas oculta o aviso após um tempo
+            setTimeout(() => {
+                const warning = document.getElementById('configWarning');
+                if (warning) {
+                    warning.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        // Função para alternar entre abas
+        function switchTab(tabName) {
+            // Remover classe active de todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
             
-            sistemas.forEach(sistema => {
-                if (initialData[sistema]) {
-                    Object.keys(initialData[sistema]).forEach(periodo => {
-                        allPeriods.add(periodo);
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Adicionar classe active à aba selecionada
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Função para obter todos os períodos únicos
+        function getAllPeriods() {
+            const periods = new Set();
+            
+            Object.keys(initialData).forEach(sistema => {
+                Object.keys(initialData[sistema]).forEach(periodo => {
+                    periods.add(periodo);
+                });
+            });
+            
+            return Array.from(periods).sort();
+        }
+
+        // Função para atualizar selects de período
+        function updatePeriodSelects() {
+            const periods = getAllPeriods();
+            const selects = ['data-periodo', 'delete-period', 'rename-period-old'];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Selecione o período</option>';
+                    
+                    periods.forEach(period => {
+                        const option = document.createElement('option');
+                        option.value = period;
+                        option.textContent = period;
+                        if (period === currentValue) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
                     });
                 }
             });
-            
-            return sortPeriods(Array.from(allPeriods));
         }
 
-        // Função para testar a conexão com o Firebase
+        // Função para adicionar período
+        function addPeriod(newPeriod, sistema = 'all') {
+            // Validar formato do período
+            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+            if (!periodRegex.test(newPeriod)) {
+                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
+                return;
+            }
+            
+            if (sistema === 'all') {
+                // Adicionar para todos os sistemas
+                Object.keys(initialData).forEach(sys => {
+                    if (!initialData[sys][newPeriod]) {
+                        initialData[sys][newPeriod] = {};
+                    }
+                });
+            } else {
+                // Adicionar apenas para o sistema especificado
+                if (!initialData[sistema]) {
+                    initialData[sistema] = {};
+                }
+                if (!initialData[sistema][newPeriod]) {
+                    initialData[sistema][newPeriod] = {};
+                }
+            }
+            
+            fillTables();
+            saveDataAndNotify();
+            alert('Período adicionado com sucesso!');
+        }
+
+        // Função para excluir período
+        function deletePeriod(periodo, sistema = 'all') {
+            if (sistema === 'all') {
+                // Excluir de todos os sistemas
+                Object.keys(initialData).forEach(sys => {
+                    if (initialData[sys][periodo]) {
+                        delete initialData[sys][periodo];
+                    }
+                });
+            } else {
+                // Excluir apenas do sistema especificado
+                if (initialData[sistema] && initialData[sistema][periodo]) {
+                    delete initialData[sistema][periodo];
+                }
+            }
+            
+            fillTables();
+            saveDataAndNotify();
+            alert('Período excluído com sucesso!');
+        }
+
+        // Função para renomear período
+        function renamePeriod(oldName, newName) {
+            // Validar formato do novo período
+            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+            if (!periodRegex.test(newName)) {
+                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
+                return;
+            }
+            
+            Object.keys(initialData).forEach(sistema => {
+                if (initialData[sistema][oldName]) {
+                    initialData[sistema][newName] = initialData[sistema][oldName];
+                    delete initialData[sistema][oldName];
+                }
+            });
+            
+            fillTables();
+            saveDataAndNotify();
+            alert('Período renomeado com sucesso!');
+        }
+
+        // Função para excluir linha
+        function deleteRow(rowIndex, sistema) {
+            // Esta função pode ser implementada conforme necessário
+            alert('Funcionalidade de exclusão de linha será implementada');
+        }
+
+        // Função para testar conexão com Firebase
         async function testFirebaseConnection() {
+            if (!firebaseReady) {
+                console.log("Firebase ainda não está pronto");
+                return false;
+            }
+            
             const statusElement = document.getElementById('firebaseStatus');
             const statusText = document.getElementById('connectionStatusText');
             
             try {
                 // Verificar se o Firebase está disponível
-                if (typeof firebaseDatabase !== 'undefined') {
+                if (typeof window.firebaseDatabase !== 'undefined') {
                     // Tentar escrever um dado de teste
-                    const testRef = ref(firebaseDatabase, 'connection_test');
-                    await set(testRef, {
+                    const testRef = window.firebaseRef(window.firebaseDatabase, 'connection_test');
+                    await window.firebaseSet(testRef, {
                         timestamp: new Date().toISOString(),
                         message: "Teste de conexão do Controle de Churn"
                     });
@@ -1013,7 +1191,7 @@
                     // Atualizar UI com status de conectado
                     statusElement.className = 'firebase-status status-connected';
                     statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
-                    statusText.textContent = 'Conectado com sucesso';
+                    if (statusText) statusText.textContent = 'Conectado com sucesso';
                     
                     console.log("Conexão com Firebase estabelecida com sucesso");
                     return true;
@@ -1026,7 +1204,7 @@
                 // Atualizar UI com status de desconectado
                 statusElement.className = 'firebase-status status-disconnected';
                 statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
-                statusText.textContent = 'Desconectado: ' + error.message;
+                if (statusText) statusText.textContent = 'Desconectado: ' + error.message;
                 
                 return false;
             }
@@ -1034,11 +1212,16 @@
 
         // Função para salvar dados no Firebase
         async function saveDataToFirebase() {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
+                return;
+            }
+            
             const backupName = document.getElementById('backup-name').value || 'backup-' + new Date().toISOString().slice(0, 10);
             
             try {
-                const backupRef = ref(firebaseDatabase, 'backups/' + backupName);
-                await set(backupRef, {
+                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
+                await window.firebaseSet(backupRef, {
                     timestamp: new Date().toISOString(),
                     data: initialData
                 });
@@ -1053,15 +1236,20 @@
 
         // Função para carregar dados do Firebase
         async function loadDataFromFirebase(backupName = null) {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
+                return;
+            }
+            
             try {
                 let backupRef;
                 
                 if (backupName) {
-                    backupRef = ref(firebaseDatabase, 'backups/' + backupName);
+                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
                 } else {
                     // Carregar o backup mais recente
-                    backupRef = ref(firebaseDatabase, 'backups');
-                    const snapshot = await get(backupRef);
+                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                    const snapshot = await window.firebaseGet(backupRef);
                     
                     if (snapshot.exists()) {
                         const backups = snapshot.val();
@@ -1079,7 +1267,7 @@
                                 }
                             }
                             
-                            backupRef = ref(firebaseDatabase, 'backups/' + latestBackup);
+                            backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + latestBackup);
                         } else {
                             throw new Error("Nenhum backup encontrado");
                         }
@@ -1088,7 +1276,7 @@
                     }
                 }
                 
-                const snapshot = await get(backupRef);
+                const snapshot = await window.firebaseGet(backupRef);
                 
                 if (snapshot.exists()) {
                     const backupData = snapshot.val();
@@ -1108,11 +1296,16 @@
 
         // Função para configurar o listener em tempo real
         function setupRealtimeListener() {
+            if (!firebaseReady) {
+                console.log("Firebase ainda não está pronto para configurar listener");
+                return;
+            }
+            
             try {
-                const dataRef = ref(firebaseDatabase, 'current_data');
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
                 
                 // Escutar por mudanças em tempo real
-                onValue(dataRef, (snapshot) => {
+                window.firebaseOnValue(dataRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const newData = snapshot.val();
                         initialData = newData;
@@ -1130,9 +1323,14 @@
 
         // Função para salvar dados e notificar outros dispositivos
         async function saveDataAndNotify() {
+            if (!firebaseReady) {
+                console.log("Firebase ainda não está pronto para salvar dados");
+                return;
+            }
+            
             try {
-                const dataRef = ref(firebaseDatabase, 'current_data');
-                await set(dataRef, initialData);
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                await window.firebaseSet(dataRef, initialData);
                 
                 // Também criar um backup
                 await saveDataToFirebase();
@@ -1145,9 +1343,14 @@
 
         // Função para carregar a lista de backups
         async function loadBackupList() {
+            if (!firebaseReady) {
+                document.getElementById('backup-list').innerHTML = '<p>Firebase ainda não está pronto</p>';
+                return;
+            }
+            
             try {
-                const backupRef = ref(firebaseDatabase, 'backups');
-                const snapshot = await get(backupRef);
+                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                const snapshot = await window.firebaseGet(backupRef);
                 const backupList = document.getElementById('backup-list');
                 
                 if (snapshot.exists()) {
@@ -1186,10 +1389,15 @@
 
         // Função para excluir um backup
         async function deleteBackup(backupName) {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto.');
+                return;
+            }
+            
             if (confirm(`Tem certeza que deseja excluir o backup "${backupName}"?`)) {
                 try {
-                    const backupRef = ref(firebaseDatabase, 'backups/' + backupName);
-                    await remove(backupRef);
+                    const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
+                    await window.firebaseRemove(backupRef);
                     
                     alert('Backup excluído com sucesso!');
                     loadBackupList();
@@ -1202,10 +1410,15 @@
 
         // Função para limpar todos os dados do Firebase
         async function clearFirebaseData() {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto.');
+                return;
+            }
+            
             if (confirm('Tem certeza que deseja limpar TODOS os dados do Firebase? Esta ação não pode ser desfeita.')) {
                 try {
-                    const dataRef = ref(firebaseDatabase, 'backups');
-                    await remove(dataRef);
+                    const dataRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                    await window.firebaseRemove(dataRef);
                     
                     alert('Dados do Firebase limpos com sucesso!');
                     loadBackupList();
@@ -1338,146 +1551,12 @@
             });
         }
 
-        // Função para atualizar os selects de período
-        function updatePeriodSelects() {
-            const periodos = getAllPeriods();
-            
-            // Atualizar select do formulário
-            const periodoSelect = document.getElementById('data-periodo');
-            periodoSelect.innerHTML = '<option value="">Selecione o período</option>';
-            periodos.forEach(periodo => {
-                periodoSelect.innerHTML += `<option value="${periodo}">${periodo}</option>`;
-            });
-            
-            // Atualizar selects do modal de gerenciamento
-            const deleteSelect = document.getElementById('delete-period');
-            const renameSelect = document.getElementById('rename-period-old');
-            
-            deleteSelect.innerHTML = '';
-            renameSelect.innerHTML = '';
-            
-            periodos.forEach(periodo => {
-                deleteSelect.innerHTML += `<option value="${periodo}">${periodo}</option>`;
-                renameSelect.innerHTML += `<option value="${periodo}">${periodo}</option>`;
-            });
-        }
-
-        // Função para renomear um período
-        function renamePeriod(oldName, newName) {
-            const sistemas = ['accessorias', 'sittax', 'openix'];
-            
-            sistemas.forEach(sistema => {
-                if (initialData[sistema] && initialData[sistema][oldName]) {
-                    initialData[sistema][newName] = initialData[sistema][oldName];
-                    delete initialData[sistema][oldName];
-                }
-            });
-            
-            fillTables();
-            saveDataAndNotify();
-        }
-
-        // Função para excluir um período
-        function deletePeriod(periodo, sistema) {
-            if (sistema === 'all') {
-                // Excluir de todos os sistemas
-                const sistemas = ['accessorias', 'sittax', 'openix'];
-                sistemas.forEach(sis => {
-                    if (initialData[sis] && initialData[sis][periodo]) {
-                        delete initialData[sis][periodo];
-                    }
-                });
-            } else {
-                // Excluir apenas do sistema específico
-                if (initialData[sistema] && initialData[sistema][periodo]) {
-                    delete initialData[sistema][periodo];
-                }
-            }
-            
-            fillTables();
-            saveDataAndNotify();
-        }
-
-        // Função para excluir uma linha
-        function deleteRow(rowIndex, sistema) {
-            const rows = [
-                { label: 'Clientes ativos (mês anterior)', key: 'clientesAtivos', format: 'number' },
-                { label: 'Novos Contratos', key: 'novosContratos', format: 'number' },
-                { label: 'Montante Inventariado', key: 'montante', format: 'currency' },
-                { label: 'Solicitações de Cancelamento', key: 'solicitacoes', format: 'number' },
-                { label: 'Cancelamentos Confirmados via CS', key: 'confirmados', format: 'number' },
-                { label: 'Cancelamentos Automáticos (inadimplência)', key: 'automaticos', format: 'number' },
-                { label: 'Clientes cancelados e inadimplência', key: 'cancelados', format: 'number' },
-                { label: '% Churn', key: 'churn', format: 'percent' },
-                { label: 'Montante Cancelado', key: 'montanteCancelado', format: 'currency' }
-            ];
-            
-            if (rowIndex >= 0 && rowIndex < rows.length) {
-                const keyToDelete = rows[rowIndex].key;
-                const periodos = getAllPeriods();
-                
-                periodos.forEach(periodo => {
-                    if (initialData[sistema] && initialData[sistema][periodo] && initialData[sistema][periodo][keyToDelete]) {
-                        delete initialData[sistema][periodo][keyToDelete];
-                    }
-                });
-                
-                fillTables();
-                saveDataAndNotify();
-            }
-        }
-
-        // Função para adicionar um novo período
-        function addPeriod(newPeriod, sistema) {
-            if (!newPeriod) return;
-            
-            // Validar formato do período (ex: Jan-25)
-            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
-            if (!periodRegex.test(newPeriod)) {
-                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
-                return;
-            }
-            
-            const sistemas = sistema === 'all' ? ['accessorias', 'sittax', 'openix'] : [sistema];
-            
-            sistemas.forEach(sis => {
-                if (!initialData[sis]) {
-                    initialData[sis] = {};
-                }
-                
-                if (!initialData[sis][newPeriod]) {
-                    initialData[sis][newPeriod] = {};
-                }
-            });
-            
-            fillTables();
-            saveDataAndNotify();
-        }
-
-        // Função para alternar entre as abas
-        function switchTab(tabName) {
-            // Esconder todas as abas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar a aba selecionada
-            document.getElementById(tabName + '-tab').classList.add('active');
-            
-            // Atualizar a navegação de abas
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            event.currentTarget.classList.add('active');
-        }
-
-        // Dados para os gráficos
+        // Dados dos gráficos
         const churnData = {
             labels: ['Acessorias', 'Sittax', 'Openix'],
             datasets: [{
                 label: 'Taxa de Churn (%)',
-                data: [3.6, 6.6, 8.6],
+                data: [3.21, 6.88, 10.31],
                 backgroundColor: [
                     'rgba(52, 152, 219, 0.7)',
                     'rgba(46, 204, 113, 0.7)',
@@ -1488,15 +1567,37 @@
                     'rgba(46, 204, 113, 1)',
                     'rgba(155, 89, 182, 1)'
                 ],
-                borderWidth: 1
+                borderWidth: 2
             }]
         };
 
         const evolutionConfig = {
             type: 'line',
             data: {
-                labels: [],
-                datasets: []
+                labels: ['Jan-24', 'Fev-24', 'Mar-24', 'Abr-24', 'Mai-24'],
+                datasets: [
+                    {
+                        label: 'Acessorias',
+                        data: [3.21, 3.19, 2.95, 3.12, 2.87],
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Sittax',
+                        data: [6.88, 6.69, 7.12, 6.45, 6.78],
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Openix',
+                        data: [10.31, 9.50, 11.23, 9.87, 10.45],
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        tension: 0.4
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -1577,6 +1678,15 @@
 
         // Inicializar a aplicação quando a página carregar
         window.onload = async function() {
+            // Aguardar Firebase estar pronto
+            if (firebaseReady) {
+                await initializeApp();
+            } else {
+                window.addEventListener('firebaseReady', initializeApp);
+            }
+        };
+
+        async function initializeApp() {
             // Testar conexão com Firebase
             await testFirebaseConnection();
             
@@ -1585,8 +1695,8 @@
             
             // Tentar carregar dados do Firebase
             try {
-                const dataRef = ref(firebaseDatabase, 'current_data');
-                const snapshot = await get(dataRef);
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                const snapshot = await window.firebaseGet(dataRef);
                 
                 if (snapshot.exists()) {
                     initialData = snapshot.val();
@@ -1604,11 +1714,17 @@
             new Chart(document.getElementById('evolutionChart'), evolutionConfig);
             new Chart(document.getElementById('distributionChart'), distributionConfig);
             
+            // Configurar modais e eventos
+            setupModals();
+            setupEventListeners();
+        }
+
+        function setupModals() {
             // Configurar modal do formulário
             const modal = document.getElementById("formModal");
             const openBtn = document.getElementById("openFormBtn");
             const closeBtn = document.getElementById("closeFormBtn");
-            const span = document.getElementsByClassName("close")[0];
+            const span = modal.querySelector(".close");
             
             openBtn.onclick = function() {
                 modal.style.display = "block";
@@ -1660,7 +1776,9 @@
                     firebaseModal.style.display = "none";
                 }
             }
-            
+        }
+
+        function setupEventListeners() {
             // Adicionar evento de submit ao formulário
             document.getElementById('data-form').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1695,7 +1813,7 @@
                 saveDataAndNotify();
                 
                 alert('Dados salvos com sucesso!');
-                modal.style.display = "none";
+                document.getElementById("formModal").style.display = "none";
                 
                 // Limpar formulário
                 document.getElementById('data-form').reset();
@@ -1800,7 +1918,7 @@
                     alert('Por favor, selecione um período e informe um novo nome.');
                 }
             });
-        };
+        }
     </script>
 </body>
 </html>
