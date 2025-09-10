@@ -111,7 +111,7 @@
         
         .card-title {
             margin: 0;
-            color: var(--primary-color;
+            color: var(--primary-color);
         }
         
         .chart-container {
@@ -668,7 +668,7 @@
                                 <input type="number" id="data-clientes-ativos" min="0" required>
                             </div>
                             
-                                                        <div class="form-group">
+                            <div class="form-group">
                                 <label for="data-novos-contratos">Novos Contratos:</label>
                                 <input type="number" id="data-novos-contratos" min="0" required>
                             </div>
@@ -849,13 +849,13 @@
         </div>
     </div>
 
-    <!-- Firebase App (o core do Firebase) - CONFIGURAÇÃO CORRIGIDA -->
+    <!-- Firebase App (o core do Firebase) -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Sua configuração do Firebase - CORRIGIDA
+        // Sua configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
             authDomain: "controle-churn.firebaseapp.com",
@@ -864,7 +864,7 @@
             storageBucket: "controle-churn.appspot.com",
             messagingSenderId: "975438802283",
             appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
-        };
+         };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -876,59 +876,6 @@
         window.firebaseDatabase = database;
         
         console.log("Firebase inicializado com sucesso!");
-        
-        // Função para testar a conexão com o Firebase
-        window.testFirebaseConnection = async function() {
-            const statusElement = document.getElementById('firebaseStatus');
-            const statusText = document.getElementById('connectionStatusText');
-            
-            try {
-                // Verificar se o Firebase está disponível
-                if (typeof database !== 'undefined') {
-                    // Tentar escrever um dado de teste
-                    const testRef = ref(database, 'connection_test');
-                    await set(testRef, {
-                        timestamp: new Date().toISOString(),
-                        message: "Teste de conexão do Controle de Churn"
-                    });
-                    
-                    // Atualizar UI com status de conectado
-                    statusElement.className = 'firebase-status status-connected';
-                    statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
-                    if (statusText) statusText.textContent = 'Conectado com sucesso';
-                    
-                    console.log("Conexão com Firebase estabelecida com sucesso");
-                    return true;
-                } else {
-                    throw new Error("Firebase não está disponível");
-                }
-            } catch (error) {
-                console.error("Erro na conexão com Firebase:", error);
-                
-                // Atualizar UI com status de desconectado
-                statusElement.className = 'firebase-status status-disconnected';
-                statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
-                if (statusText) statusText.textContent = 'Desconectado: ' + error.message;
-                
-                return false;
-            }
-        };
-        
-        // Testar a conexão imediatamente após inicializar
-        setTimeout(() => {
-            if (window.testFirebaseConnection) {
-                window.testFirebaseConnection().then(isConnected => {
-                    if (isConnected) {
-                        console.log("Conexão estabelecida com sucesso!");
-                        if (window.setupRealtimeListener) {
-                            window.setupRealtimeListener();
-                        }
-                    } else {
-                        console.error("Falha na conexão com Firebase");
-                    }
-                });
-            }
-        }, 1000);
     </script>
 
     <script>
@@ -1048,40 +995,40 @@
             return sortPeriods(Array.from(allPeriods));
         }
 
-        // Função para configurar o listener em tempo real
-        function setupRealtimeListener() {
+        // Função para testar a conexão com o Firebase
+        async function testFirebaseConnection() {
+            const statusElement = document.getElementById('firebaseStatus');
+            const statusText = document.getElementById('connectionStatusText');
+            
             try {
-                const dataRef = ref(window.firebaseDatabase, 'current_data');
-                
-                // Escutar por mudanças em tempo real
-                onValue(dataRef, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const newData = snapshot.val();
-                        initialData = newData;
-                        fillTables();
-                        updateCharts();
-                        console.log("Dados atualizados em tempo real do Firebase");
-                    }
-                });
-                
-                console.log("Listener em tempo real configurado");
+                // Verificar se o Firebase está disponível
+                if (typeof firebaseDatabase !== 'undefined') {
+                    // Tentar escrever um dado de teste
+                    const testRef = ref(firebaseDatabase, 'connection_test');
+                    await set(testRef, {
+                        timestamp: new Date().toISOString(),
+                        message: "Teste de conexão do Controle de Churn"
+                    });
+                    
+                    // Atualizar UI com status de conectado
+                    statusElement.className = 'firebase-status status-connected';
+                    statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
+                    statusText.textContent = 'Conectado com sucesso';
+                    
+                    console.log("Conexão com Firebase estabelecida com sucesso");
+                    return true;
+                } else {
+                    throw new Error("Firebase não está disponível");
+                }
             } catch (error) {
-                console.error("Erro ao configurar listener em tempo real:", error);
-            }
-        }
-
-        // Função para salvar dados e notificar outros dispositivos
-        async function saveDataAndNotify() {
-            try {
-                const dataRef = ref(window.firebaseDatabase, 'current_data');
-                await set(dataRef, initialData);
+                console.error("Erro na conexão com Firebase:", error);
                 
-                // Também criar um backup
-                await saveDataToFirebase();
+                // Atualizar UI com status de desconectado
+                statusElement.className = 'firebase-status status-disconnected';
+                statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
+                statusText.textContent = 'Desconectado: ' + error.message;
                 
-                console.log("Dados salvos e notificação enviada para outros dispositivos");
-            } catch (error) {
-                console.error("Erro ao salvar dados e notificar:", error);
+                return false;
             }
         }
 
@@ -1090,7 +1037,7 @@
             const backupName = document.getElementById('backup-name').value || 'backup-' + new Date().toISOString().slice(0, 10);
             
             try {
-                const backupRef = ref(window.firebaseDatabase, 'backups/' + backupName);
+                const backupRef = ref(firebaseDatabase, 'backups/' + backupName);
                 await set(backupRef, {
                     timestamp: new Date().toISOString(),
                     data: initialData
@@ -1110,10 +1057,10 @@
                 let backupRef;
                 
                 if (backupName) {
-                    backupRef = ref(window.firebaseDatabase, 'backups/' + backupName);
+                    backupRef = ref(firebaseDatabase, 'backups/' + backupName);
                 } else {
                     // Carregar o backup mais recente
-                    backupRef = ref(window.firebaseDatabase, 'backups');
+                    backupRef = ref(firebaseDatabase, 'backups');
                     const snapshot = await get(backupRef);
                     
                     if (snapshot.exists()) {
@@ -1132,7 +1079,7 @@
                                 }
                             }
                             
-                            backupRef = ref(window.firebaseDatabase, 'backups/' + latestBackup);
+                            backupRef = ref(firebaseDatabase, 'backups/' + latestBackup);
                         } else {
                             throw new Error("Nenhum backup encontrado");
                         }
@@ -1159,10 +1106,47 @@
             }
         }
 
+        // Função para configurar o listener em tempo real
+        function setupRealtimeListener() {
+            try {
+                const dataRef = ref(firebaseDatabase, 'current_data');
+                
+                // Escutar por mudanças em tempo real
+                onValue(dataRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const newData = snapshot.val();
+                        initialData = newData;
+                        fillTables();
+                        updateCharts();
+                        console.log("Dados atualizados em tempo real do Firebase");
+                    }
+                });
+                
+                console.log("Listener em tempo real configurado");
+            } catch (error) {
+                console.error("Erro ao configurar listener em tempo real:", error);
+            }
+        }
+
+        // Função para salvar dados e notificar outros dispositivos
+        async function saveDataAndNotify() {
+            try {
+                const dataRef = ref(firebaseDatabase, 'current_data');
+                await set(dataRef, initialData);
+                
+                // Também criar um backup
+                await saveDataToFirebase();
+                
+                console.log("Dados salvos e notificação enviada para outros dispositivos");
+            } catch (error) {
+                console.error("Erro ao salvar dados e notificar:", error);
+            }
+        }
+
         // Função para carregar a lista de backups
         async function loadBackupList() {
             try {
-                const backupRef = ref(window.firebaseDatabase, 'backups');
+                const backupRef = ref(firebaseDatabase, 'backups');
                 const snapshot = await get(backupRef);
                 const backupList = document.getElementById('backup-list');
                 
@@ -1204,7 +1188,7 @@
         async function deleteBackup(backupName) {
             if (confirm(`Tem certeza que deseja excluir o backup "${backupName}"?`)) {
                 try {
-                    const backupRef = ref(window.firebaseDatabase, 'backups/' + backupName);
+                    const backupRef = ref(firebaseDatabase, 'backups/' + backupName);
                     await remove(backupRef);
                     
                     alert('Backup excluído com sucesso!');
@@ -1220,7 +1204,7 @@
         async function clearFirebaseData() {
             if (confirm('Tem certeza que deseja limpar TODOS os dados do Firebase? Esta ação não pode ser desfeita.')) {
                 try {
-                    const dataRef = ref(window.firebaseDatabase, 'backups');
+                    const dataRef = ref(firebaseDatabase, 'backups');
                     await remove(dataRef);
                     
                     alert('Dados do Firebase limpos com sucesso!');
@@ -1499,7 +1483,7 @@
                     'rgba(46, 204, 113, 0.7)',
                     'rgba(155, 89, 182, 0.7)'
                 ],
-                                borderColor: [
+                borderColor: [
                     'rgba(52, 152, 219, 1)',
                     'rgba(46, 204, 113, 1)',
                     'rgba(155, 89, 182, 1)'
@@ -1593,16 +1577,20 @@
 
         // Inicializar a aplicação quando a página carregar
         window.onload = async function() {
+            // Testar conexão com Firebase
+            await testFirebaseConnection();
+            
+            // Configurar listener em tempo real
+            setupRealtimeListener();
+            
             // Tentar carregar dados do Firebase
             try {
-                if (window.firebaseDatabase) {
-                    const dataRef = ref(window.firebaseDatabase, 'current_data');
-                    const snapshot = await get(dataRef);
-                    
-                    if (snapshot.exists()) {
-                        initialData = snapshot.val();
-                        console.log("Dados carregados do Firebase");
-                    }
+                const dataRef = ref(firebaseDatabase, 'current_data');
+                const snapshot = await get(dataRef);
+                
+                if (snapshot.exists()) {
+                    initialData = snapshot.val();
+                    console.log("Dados carregados do Firebase");
                 }
             } catch (error) {
                 console.error("Erro ao carregar dados do Firebase:", error);
@@ -1813,22 +1801,6 @@
                 }
             });
         };
-
-        // Adicione esta função para debug
-        function checkFirebaseConnection() {
-            console.log("Firebase Database object:", window.firebaseDatabase);
-            console.log("Firebase App object:", typeof app !== 'undefined' ? app : 'Não definido');
-            
-            if (typeof window.firebaseDatabase === 'undefined') {
-                console.error("Firebase não foi inicializado corretamente");
-                document.getElementById('firebaseStatus').className = 'firebase-status status-disconnected';
-                document.getElementById('firebaseStatus').innerHTML = '<i class="fas fa-plug"></i> Firebase: Erro de Inicialização';
-            }
-        }
-
-        // Chame esta função para verificar se o Firebase foi inicializado corretamente
-        setTimeout(checkFirebaseConnection, 3000);
     </script>
 </body>
 </html>
-                    
