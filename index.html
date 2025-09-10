@@ -850,33 +850,43 @@
     </div>
 
     <!-- Firebase App (o core do Firebase) -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Sua configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
-            authDomain: "controle-churn.firebaseapp.com",
-            databaseURL: "https://controle-churn-default-rtdb.firebaseio.com",
-            projectId: "controle-churn",
-            storageBucket: "controle-churn.appspot.com",
-            messagingSenderId: "975438802283",
-            appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
-         };
+    // Sua configuração do Firebase - CORRIGIDA
+    const firebaseConfig = {
+        apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
+        authDomain: "controle-churn.firebaseapp.com",
+        databaseURL: "https://controle-churn-default-rtdb.firebaseio.com",
+        projectId: "controle-churn",
+        storageBucket: "controle-churn.appspot.com",
+        messagingSenderId: "975438802283",
+        appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
+    };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        
-        // Initialize Realtime Database
-        const database = getDatabase(app);
-        
-        // Variável global para acessar o banco de dados
-        window.firebaseDatabase = database;
-        
-        console.log("Firebase inicializado com sucesso!");
-    </script>
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    
+    // Initialize Realtime Database
+    const database = getDatabase(app);
+    
+    // Variável global para acessar o banco de dados
+    window.firebaseDatabase = database;
+    
+    console.log("Firebase inicializado com sucesso!");
+    
+    // Testar a conexão imediatamente após inicializar
+    testFirebaseConnection().then(isConnected => {
+        if (isConnected) {
+            console.log("Conexão estabelecida com sucesso!");
+            setupRealtimeListener();
+        } else {
+            console.error("Falha na conexão com Firebase");
+        }
+    });
+</script>
 
     <script>
         // Dados iniciais para as tabelas
