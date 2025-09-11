@@ -15,13 +15,13 @@
 
         // Configuração do Firebase - SUBSTITUA PELAS SUAS CREDENCIAIS
         const firebaseConfig = {
-            apiKey: "AIzaSyBlv0uUi_PyhsbE9rY52MWTbaDmfMku9pY",
+            apiKey: "SUA_API_KEY_AQUI",
             authDomain: "controle-churn.firebaseapp.com",
             databaseURL: "https://controle-churn-default-rtdb.firebaseio.com/",
             projectId: "controle-churn",
             storageBucket: "controle-churn.appspot.com",
-            messagingSenderId: "975438802283",
-            appId: "1:975438802283:web:bb2f8d586d87cbd1eb302e"
+            messagingSenderId: "SEU_SENDER_ID_AQUI",
+            appId: "SEU_APP_ID_AQUI"
         };
 
         // Inicializar Firebase
@@ -1062,686 +1062,725 @@
                 });
             });
             
-            // Converter Set para Array e ordenar corretamente por mês e ano
-            const sortedPeriods = Array.from(periods).sort((a, b) => {
-                // Mapear nomes dos meses para números
-                const monthMap = {
-                    'Jan': 1, 'Fev': 2, 'Mar': 3, 'Abr': 4, 'Mai': 5, 'Jun': 6,
-                    'Jul': 7, 'Ago': 8, 'Set': 9, 'Out': 10, 'Nov': 11, 'Dez': 12
-                };
-                
-                // Dividir o período em mês e ano (ex: "Jan-24" -> ["Jan", "24"])
-                const [monthA, yearA] = a.split('-');
-                const [monthB, yearB] = b.split('-');
-                
-                // Comparar anos primeiro
-                if (parseInt('20' + yearA) !== parseInt('20' + yearB)) {
-                    return parseInt('20' + yearA) - parseInt('20' + yearB);
-                }
-                
-                // Se o ano for igual, comparar meses
-                return monthMap[monthA] - monthMap[monthB];
-            });
-            
-            return sortedPeriods;
+            return Array.from(periods).sort();
         }
 
-        // Função para popular as tabelas com dados
-        function populateTables() {
+        // Função para atualizar selects de período
+        function updatePeriodSelects() {
             const periods = getAllPeriods();
+            const selects = ['data-periodo', 'delete-period', 'rename-period-old'];
             
-            // Definir indicadores na ordem correta
-            const indicators = [
-                'Clientes Ativos (mês anterior)',
-                'Novos Contratos',
-                'Montante Inventariado (R$)',
-                'Solicitações de Cancelamento',
-                'Cancelamentos Confirmados via CS',
-                'Cancelamentos Automáticos (inadimplência)',
-                'Clientes Cancelados e Inadimplência',
-                '% Churn',
-                'Montante Cancelado (R$)'
-            ];
-            
-            // Mapear indicadores para chaves de dados
-            const indicatorKeys = {
-                'Clientes Ativos (mês anterior)': 'clientesAtivos',
-                'Novos Contratos': 'novosContratos',
-                'Montante Inventariado (R$)': 'montante',
-                'Solicitações de Cancelamento': 'solicitacoes',
-                'Cancelamentos Confirmados via CS': 'confirmados',
-                'Cancelamentos Automáticos (inadimplência)': 'automaticos',
-                'Clientes Cancelados e Inadimplência': 'cancelados',
-                '% Churn': 'churn',
-                'Montante Cancelado (R$)': 'montanteCancelado'
-            };
-            
-            // Popular cada tabela
-            ['accessorias', 'sittax', 'openix'].forEach(sistema => {
-                const table = document.getElementById(`${sistema}-table`);
-                const thead = table.querySelector('thead tr');
-                const tbody = table.querySelector('tbody');
-                
-                // Limpar cabeçalho e corpo
-                while (thead.children.length > 2) {
-                    thead.removeChild(thead.lastChild);
-                }
-                tbody.innerHTML = '';
-                
-                // Adicionar colunas de período ao cabeçalho
-                periods.forEach(periodo => {
-                    const th = document.createElement('th');
-                    th.textContent = periodo;
-                    th.className = 'editable-header';
-                    th.dataset.period = periodo;
-                    th.dataset.system = sistema;
-                    th.onclick = () => startEditHeader(periodo, sistema);
-                    thead.appendChild(th);
-                });
-                
-                // Adicionar linhas de dados
-                indicators.forEach(indicator => {
-                    const tr = document.createElement('tr');
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Selecione o período</option>';
                     
-                    // Coluna de ações
-                    const tdActions = document.createElement('td');
-                    tdActions.className = 'row-actions';
-                    tr.appendChild(tdActions);
-                    
-                    // Coluna do indicador
-                    const tdIndicator = document.createElement('td');
-                    tdIndicator.textContent = indicator;
-                    tr.appendChild(tdIndicator);
-                    
-                    // Colunas de dados para cada período
-                    periods.forEach(periodo => {
-                        const td = document.createElement('td');
-                        td.dataset.period = periodo;
-                        td.dataset.system = sistema;
-                        td.dataset.indicator = indicatorKeys[indicator];
-                        
-                        const key = indicatorKeys[indicator];
-                        if (initialData[sistema] && initialData[sistema][periodo]) {
-                            td.textContent = initialData[sistema][periodo][key] || '-';
-                        } else {
-                            td.textContent = '-';
+                    periods.forEach(period => {
+                        const option = document.createElement('option');
+                        option.value = period;
+                        option.textContent = period;
+                        if (period === currentValue) {
+                            option.selected = true;
                         }
-                        
-                        tr.appendChild(td);
-                    });
-                    
-                    tbody.appendChild(tr);
-                });
-            });
-            
-            // Popular dropdowns de período
-            populatePeriodDropdowns();
-        }
-
-        // Função para popular dropdowns de período
-        function populatePeriodDropdowns() {
-            const periods = getAllPeriods();
-            
-            // Dropdown do formulário
-            const periodoSelect = document.getElementById('data-periodo');
-            periodoSelect.innerHTML = '<option value="">Selecione o período</option>';
-            periods.forEach(periodo => {
-                const option = document.createElement('option');
-                option.value = periodo;
-                option.textContent = periodo;
-                periodoSelect.appendChild(option);
-            });
-            
-            // Dropdowns do modal de gerenciamento
-            const deleteSelect = document.getElementById('delete-period');
-            const renameSelect = document.getElementById('rename-period-old');
-            
-            deleteSelect.innerHTML = '<option value="">Selecione o período</option>';
-            renameSelect.innerHTML = '<option value="">Selecione o período</option>';
-            
-            periods.forEach(periodo => {
-                const option1 = document.createElement('option');
-                option1.value = periodo;
-                option1.textContent = periodo;
-                deleteSelect.appendChild(option1);
-                
-                const option2 = document.createElement('option');
-                option2.value = periodo;
-                option2.textContent = periodo;
-                renameSelect.appendChild(option2);
-            });
-        }
-
-        // Função para inicializar os gráficos
-        function initCharts() {
-            // Dados de exemplo para os gráficos
-            const churnData = {
-                labels: ['Acessorias', 'Sittax', 'Openix'],
-                datasets: [{
-                    label: 'Taxa de Churn (%)',
-                    data: [3.21, 6.88, 10.31],
-                    backgroundColor: [
-                        'rgba(52, 152, 219, 0.7)',
-                        'rgba(46, 204, 113, 0.7)',
-                        'rgba(155, 89, 182, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(52, 152, 219, 1)',
-                        'rgba(46, 204, 113, 1)',
-                        'rgba(155, 89, 182, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            };
-            
-            const evolutionData = {
-                labels: ['Jan-24', 'Fev-24', 'Mar-24', 'Abr-24', 'Mai-24', 'Jun-24'],
-                datasets: [
-                    {
-                        label: 'Acessorias',
-                        data: [3.21, 3.19, 3.25, 3.30, 3.15, 3.10],
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Sittax',
-                        data: [6.88, 6.69, 6.75, 6.80, 6.60, 6.50],
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Openix',
-                        data: [10.31, 9.50, 9.80, 10.10, 9.40, 9.20],
-                        borderColor: 'rgba(155, 89, 182, 1)',
-                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
-                        tension: 0.4
-                    }
-                ]
-            };
-            
-            const distributionData = {
-                labels: ['Cancelamento Solicitado', 'Inadimplência', 'Outros'],
-                datasets: [
-                    {
-                        label: 'Acessorias',
-                        data: [54, 10, 0],
-                        backgroundColor: 'rgba(52, 152, 219, 0.7)'
-                    },
-                    {
-                        label: 'Sittax',
-                        data: [56, 13, 0],
-                        backgroundColor: 'rgba(46, 204, 113, 0.7)'
-                    },
-                    {
-                        label: 'Openix',
-                        data: [37, 10, 0],
-                        backgroundColor: 'rgba(155, 89, 182, 0.7)'
-                    }
-                ]
-            };
-            
-            // Configurações dos gráficos
-            const churnOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Taxa de Churn (%)'
-                        }
-                    }
-                }
-            };
-            
-            const evolutionOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Taxa de Churn (%)'
-                        }
-                    }
-                }
-            };
-            
-            const distributionOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: true,
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true
-                    }
-                }
-            };
-            
-            // Criar os gráficos
-            const churnCtx = document.getElementById('churnChart').getContext('2d');
-            const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
-            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-            
-            new Chart(churnCtx, {
-                type: 'bar',
-                data: churnData,
-                options: churnOptions
-            });
-            
-            new Chart(evolutionCtx, {
-                type: 'line',
-                data: evolutionData,
-                options: evolutionOptions
-            });
-            
-            new Chart(distributionCtx, {
-                type: 'bar',
-                data: distributionData,
-                options: distributionOptions
-            });
-        }
-
-        // Função para iniciar a edição do cabeçalho
-        function startEditHeader(periodo, sistema) {
-            if (!editMode) return;
-            
-            editingHeader = { periodo, sistema };
-            
-            const header = document.querySelector(`th[data-period="${periodo}"][data-system="${sistema}"]`);
-            const currentText = header.textContent;
-            
-            header.innerHTML = `
-                <input type="text" value="${currentText}" class="header-edit-input">
-                <button class="delete-btn delete-btn-column" onclick="deletePeriod('${periodo}', '${sistema}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            
-            const input = header.querySelector('input');
-            input.focus();
-            input.select();
-            
-            input.addEventListener('blur', function() {
-                finishEditHeader(this.value);
-            });
-            
-            input.addEventListener('keyup', function(event) {
-                if (event.key === 'Enter') {
-                    this.blur();
-                }
-            });
-        }
-
-        // Função para finalizar a edição do cabeçalho
-        function finishEditHeader(newValue) {
-            if (!editingHeader) return;
-            
-            const { periodo, sistema } = editingHeader;
-            const header = document.querySelector(`th[data-period="${periodo}"][data-system="${sistema}"]`);
-            
-            // Atualizar em todos os sistemas se necessário
-            const systems = sistema === 'all' ? ['accessorias', 'sittax', 'openix'] : [sistema];
-            
-            systems.forEach(sys => {
-                if (initialData[sys] && initialData[sys][periodo]) {
-                    // Mover dados para o novo período
-                    initialData[sys][newValue] = initialData[sys][periodo];
-                    delete initialData[sys][periodo];
-                    
-                    // Atualizar células da tabela
-                    document.querySelectorAll(`td[data-period="${periodo}"][data-system="${sys}"]`).forEach(td => {
-                        td.dataset.period = newValue;
+                        select.appendChild(option);
                     });
                 }
             });
-            
-            // Atualizar cabeçalho
-            header.textContent = newValue;
-            header.dataset.period = newValue;
-            header.className = 'editable-header';
-            header.onclick = () => startEditHeader(newValue, sistema);
-            
-            editingHeader = null;
-            populatePeriodDropdowns();
         }
 
-        // Função para excluir um período
-        function deletePeriod(periodo, sistema) {
-            if (!confirm(`Tem certeza que deseja excluir o período ${periodo}?`)) {
+        // Função para adicionar período
+        function addPeriod(newPeriod, sistema = 'all') {
+            // Validar formato do período
+            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+            if (!periodRegex.test(newPeriod)) {
+                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
                 return;
             }
             
-            const systems = sistema === 'all' ? ['accessorias', 'sittax', 'openix'] : [sistema];
-            
-            systems.forEach(sys => {
-                if (initialData[sys] && initialData[sys][periodo]) {
-                    delete initialData[sys][periodo];
-                }
-            });
-            
-            populateTables();
-        }
-
-        // Função para alternar o modo de edição
-        function toggleEditMode() {
-            editMode = !editMode;
-            const btn = document.getElementById('editTableBtn');
-            
-            if (editMode) {
-                btn.textContent = 'Sair do Modo Edição';
-                btn.style.backgroundColor = '#c0392b';
-                
-                // Adicionar indicador visual de células editáveis
-                document.querySelectorAll('td').forEach(td => {
-                    td.style.cursor = 'pointer';
-                    td.addEventListener('click', editCell);
+            if (sistema === 'all') {
+                // Adicionar para todos os sistemas
+                Object.keys(initialData).forEach(sys => {
+                    if (!initialData[sys][newPeriod]) {
+                        initialData[sys][newPeriod] = {};
+                    }
                 });
             } else {
-                btn.textContent = 'Editar Tabela';
-                btn.style.backgroundColor = '';
-                
-                // Remover indicador visual de células editáveis
-                document.querySelectorAll('td').forEach(td => {
-                    td.style.cursor = 'default';
-                    td.removeEventListener('click', editCell);
-                });
-            }
-        }
-
-        // Função para editar uma célula
-        function editCell(event) {
-            if (!editMode) return;
-            
-            const cell = event.target;
-            if (cell.tagName !== 'TD') return;
-            
-            const currentValue = cell.textContent;
-            const system = cell.dataset.system;
-            const period = cell.dataset.period;
-            const indicator = cell.dataset.indicator;
-            
-            cell.innerHTML = `<input type="text" value="${currentValue}" class="cell-edit-input">`;
-            const input = cell.querySelector('input');
-            input.focus();
-            input.select();
-            
-            input.addEventListener('blur', function() {
-                finishEditCell(this.value, cell, system, period, indicator);
-            });
-            
-            input.addEventListener('keyup', function(event) {
-                if (event.key === 'Enter') {
-                    this.blur();
+                // Adicionar apenas para o sistema especificado
+                if (!initialData[sistema]) {
+                    initialData[sistema] = {};
                 }
-            });
-        }
-
-        // Função para finalizar a edição de uma célula
-        function finishEditCell(newValue, cell, system, period, indicator) {
-            cell.textContent = newValue;
-            
-            // Atualizar os dados na estrutura initialData
-            if (!initialData[system][period]) {
-                initialData[system][period] = {};
+                if (!initialData[sistema][newPeriod]) {
+                    initialData[sistema][newPeriod] = {};
+                }
             }
             
-            initialData[system][period][indicator] = newValue;
-            
-            // Se estiver editando % Churn, atualizar o gráfico
-            if (indicator === 'churn') {
-                initCharts();
-            }
+            fillTables();
+            saveDataAndNotify();
+            alert('Período adicionado com sucesso!');
         }
 
-        // Função para testar a conexão com o Firebase
-        function testFirebaseConnection() {
-            if (!firebaseReady) {
-                updateFirebaseStatus('error', 'Firebase não inicializado');
+        // Função para excluir período
+        function deletePeriod(periodo, sistema = 'all') {
+            if (sistema === 'all') {
+                // Excluir de todos os sistemas
+                Object.keys(initialData).forEach(sys => {
+                    if (initialData[sys][periodo]) {
+                        delete initialData[sys][periodo];
+                    }
+                });
+            } else {
+                // Excluir apenas do sistema especificado
+                if (initialData[sistema] && initialData[sistema][periodo]) {
+                    delete initialData[sistema][periodo];
+                }
+            }
+            
+            fillTables();
+            saveDataAndNotify();
+            alert('Período excluído com sucesso!');
+        }
+
+        // Função para renomear período
+        function renamePeriod(oldName, newName) {
+            // Validar formato do novo período
+            const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+            if (!periodRegex.test(newName)) {
+                alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
                 return;
             }
             
-            updateFirebaseStatus('loading', 'Testando conexão...');
+            Object.keys(initialData).forEach(sistema => {
+                if (initialData[sistema][oldName]) {
+                    initialData[sistema][newName] = initialData[sistema][oldName];
+                    delete initialData[sistema][oldName];
+                }
+            });
             
-            const dbRef = window.firebaseRef(window.firebaseDatabase);
-            
-            window.firebaseGet(window.firebaseChild(dbRef, 'test'))
-                .then(() => {
-                    updateFirebaseStatus('success', 'Conectado ao Firebase');
-                })
-                .catch(error => {
-                    console.error('Erro ao conectar com Firebase:', error);
-                    updateFirebaseStatus('error', 'Erro de conexão: ' + error.message);
-                });
+            fillTables();
+            saveDataAndNotify();
+            alert('Período renomeado com sucesso!');
         }
 
-        // Função para atualizar o status do Firebase na UI
-        function updateFirebaseStatus(status, message) {
+        // Função para excluir linha
+        function deleteRow(rowIndex, sistema) {
+            // Esta função pode ser implementada conforme necessário
+            alert('Funcionalidade de exclusão de linha será implementada');
+        }
+
+        // Função para testar conexão com Firebase
+        async function testFirebaseConnection() {
+            if (!firebaseReady) {
+                console.log("Firebase ainda não está pronto");
+                return false;
+            }
+            
             const statusElement = document.getElementById('firebaseStatus');
             const statusText = document.getElementById('connectionStatusText');
             
-            if (!statusElement) return;
-            
-            statusElement.className = 'firebase-status';
-            
-            switch (status) {
-                case 'loading':
-                    statusElement.classList.add('status-loading');
-                    statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Firebase: ${message}`;
-                    break;
-                case 'success':
-                    statusElement.classList.add('status-connected');
-                    statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Firebase: ${message}`;
-                    break;
-                case 'error':
-                    statusElement.classList.add('status-disconnected');
-                    statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> Firebase: ${message}`;
-                    break;
-            }
-            
-            if (statusText) {
-                statusText.textContent = message;
+            try {
+                // Verificar se o Firebase está disponível
+                if (typeof window.firebaseDatabase !== 'undefined') {
+                    // Tentar escrever um dado de teste
+                    const testRef = window.firebaseRef(window.firebaseDatabase, 'connection_test');
+                    await window.firebaseSet(testRef, {
+                        timestamp: new Date().toISOString(),
+                        message: "Teste de conexão do Controle de Churn"
+                    });
+                    
+                    // Atualizar UI com status de conectado
+                    statusElement.className = 'firebase-status status-connected';
+                    statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Conectado';
+                    if (statusText) statusText.textContent = 'Conectado com sucesso';
+                    
+                    console.log("Conexão com Firebase estabelecida com sucesso");
+                    return true;
+                } else {
+                    throw new Error("Firebase não está disponível");
+                }
+            } catch (error) {
+                console.error("Erro na conexão com Firebase:", error);
+                
+                // Atualizar UI com status de desconectado
+                statusElement.className = 'firebase-status status-disconnected';
+                statusElement.innerHTML = '<i class="fas fa-plug"></i> Firebase: Desconectado';
+                if (statusText) statusText.textContent = 'Desconectado: ' + error.message;
+                
+                return false;
             }
         }
 
         // Função para salvar dados no Firebase
-        function saveToFirebase() {
+        async function saveDataToFirebase() {
             if (!firebaseReady) {
-                alert('Firebase não está inicializado. Verifique a configuração.');
+                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
                 return;
             }
             
             const backupName = document.getElementById('backup-name').value || 'backup-' + new Date().toISOString().slice(0, 10);
             
-            updateFirebaseStatus('loading', 'Salvando dados...');
-            
-            const dbRef = window.firebaseRef(window.firebaseDatabase, `backups/${backupName}`);
-            
-            window.firebaseSet(dbRef, initialData)
-                .then(() => {
-                    updateFirebaseStatus('success', 'Dados salvos com sucesso!');
-                    alert(`Dados salvos como "${backupName}"`);
-                    listBackups();
-                })
-                .catch(error => {
-                    console.error('Erro ao salvar dados:', error);
-                    updateFirebaseStatus('error', 'Erro ao salvar: ' + error.message);
-                    alert('Erro ao salvar dados: ' + error.message);
+            try {
+                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
+                await window.firebaseSet(backupRef, {
+                    timestamp: new Date().toISOString(),
+                    data: initialData
                 });
+                
+                alert('Dados salvos no Firebase com sucesso! Backup: ' + backupName);
+                loadBackupList();
+            } catch (error) {
+                console.error("Erro ao salvar dados no Firebase:", error);
+                alert('Erro ao salvar dados: ' + error.message);
+            }
         }
 
         // Função para carregar dados do Firebase
-        function loadFromFirebase(backupName) {
+        async function loadDataFromFirebase(backupName = null) {
             if (!firebaseReady) {
-                alert('Firebase não está inicializado. Verifique a configuração.');
+                alert('Firebase ainda não está pronto. Aguarde a inicialização.');
                 return;
             }
             
-            if (!backupName) {
-                backupName = document.getElementById('backup-name').value;
+            try {
+                let backupRef;
                 
-                if (!backupName) {
-                    alert('Por favor, informe o nome do backup ou selecione um da lista.');
-                    return;
-                }
-            }
-            
-            updateFirebaseStatus('loading', 'Carregando dados...');
-            
-            const dbRef = window.firebaseRef(window.firebaseDatabase, `backups/${backupName}`);
-            
-            window.firebaseGet(dbRef)
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        initialData = snapshot.val();
-                        populateTables();
-                        initCharts();
-                        updateFirebaseStatus('success', 'Dados carregados com sucesso!');
-                        alert(`Dados carregados de "${backupName}"`);
-                    } else {
-                        updateFirebaseStatus('error', 'Backup não encontrado');
-                        alert('Backup não encontrado: ' + backupName);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar dados:', error);
-                    updateFirebaseStatus('error', 'Erro ao carregar: ' + error.message);
-                    alert('Erro ao carregar dados: ' + error.message);
-                });
-        }
-
-        // Função para listar backups disponíveis
-        function listBackups() {
-            if (!firebaseReady) return;
-            
-            const backupList = document.getElementById('backup-list');
-            if (!backupList) return;
-            
-            backupList.innerHTML = 'Carregando...';
-            
-            const dbRef = window.firebaseRef(window.firebaseDatabase, 'backups');
-            
-            window.firebaseGet(dbRef)
-                .then(snapshot => {
+                if (backupName) {
+                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
+                } else {
+                    // Carregar o backup mais recente
+                    backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                    const snapshot = await window.firebaseGet(backupRef);
+                    
                     if (snapshot.exists()) {
                         const backups = snapshot.val();
-                        backupList.innerHTML = '';
+                        const backupKeys = Object.keys(backups);
                         
-                        Object.keys(backups).forEach(backupName => {
-                            const div = document.createElement('div');
-                            div.style.padding = '8px';
-                            div.style.borderBottom = '1px solid #eee';
-                            div.style.display = 'flex';
-                            div.style.justifyContent = 'space-between';
-                            div.style.alignItems = 'center';
+                        if (backupKeys.length > 0) {
+                            // Encontrar o backup mais recente
+                            let latestBackup = backupKeys[0];
+                            let latestTimestamp = backups[latestBackup].timestamp;
                             
-                            const nameSpan = document.createElement('span');
-                            nameSpan.textContent = backupName;
+                            for (const key of backupKeys) {
+                                if (backups[key].timestamp > latestTimestamp) {
+                                    latestBackup = key;
+                                    latestTimestamp = backups[key].timestamp;
+                                }
+                            }
                             
-                            const loadBtn = document.createElement('button');
-                            loadBtn.textContent = 'Carregar';
-                            loadBtn.className = 'btn-submit';
-                            loadBtn.style.padding = '5px 10px';
-                            loadBtn.style.fontSize = '12px';
-                            loadBtn.onclick = () => loadFromFirebase(backupName);
-                            
-                            div.appendChild(nameSpan);
-                            div.appendChild(loadBtn);
-                            backupList.appendChild(div);
-                        });
-                        
-                        if (Object.keys(backups).length === 0) {
-                            backupList.innerHTML = 'Nenhum backup encontrado.';
+                            backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + latestBackup);
+                        } else {
+                            throw new Error("Nenhum backup encontrado");
                         }
                     } else {
-                        backupList.innerHTML = 'Nenhum backup encontrado.';
+                        throw new Error("Nenhum backup encontrado");
                     }
-                })
-                .catch(error => {
-                    console.error('Erro ao listar backups:', error);
-                    backupList.innerHTML = 'Erro ao carregar backups.';
-                });
+                }
+                
+                const snapshot = await window.firebaseGet(backupRef);
+                
+                if (snapshot.exists()) {
+                    const backupData = snapshot.val();
+                    initialData = backupData.data;
+                    
+                    alert('Dados carregados do Firebase com sucesso!');
+                    fillTables();
+                    updateCharts();
+                } else {
+                    throw new Error("Backup não encontrado");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firebase:", error);
+                alert('Erro ao carregar dados: ' + error.message);
+            }
         }
 
-        // Função para limpar dados do Firebase
-        function clearFirebase() {
-            if (!confirm('Tem certeza que deseja limpar TODOS os dados do Firebase? Esta ação não pode ser desfeita.')) {
-                return;
-            }
-            
+        // Função para configurar o listener em tempo real
+        function setupRealtimeListener() {
             if (!firebaseReady) {
-                alert('Firebase não está inicializado. Verifique a configuração.');
+                console.log("Firebase ainda não está pronto para configurar listener");
                 return;
             }
             
-            updateFirebaseStatus('loading', 'Limpando dados...');
-            
-            const dbRef = window.firebaseRef(window.firebaseDatabase);
-            
-            window.firebaseSet(dbRef, null)
-                .then(() => {
-                    updateFirebaseStatus('success', 'Dados limpos com sucesso!');
-                    alert('Todos os dados do Firebase foram removidos.');
-                    listBackups();
-                })
-                .catch(error => {
-                    console.error('Erro ao limpar dados:', error);
-                    updateFirebaseStatus('error', 'Erro ao limpar: ' + error.message);
-                    alert('Erro ao limpar dados: ' + error.message);
+            try {
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                
+                // Escutar por mudanças em tempo real
+                window.firebaseOnValue(dataRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const newData = snapshot.val();
+                        initialData = newData;
+                        fillTables();
+                        updateCharts();
+                        console.log("Dados atualizados em tempo real do Firebase");
+                    }
                 });
+                
+                console.log("Listener em tempo real configurado");
+            } catch (error) {
+                console.error("Erro ao configurar listener em tempo real:", error);
+            }
         }
 
-        // Inicialização quando o DOM estiver carregado
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar gráficos e tabelas
-            initCharts();
-            populateTables();
+        // Função para salvar dados e notificar outros dispositivos
+        async function saveDataAndNotify() {
+            if (!firebaseReady) {
+                console.log("Firebase ainda não está pronto para salvar dados");
+                return;
+            }
             
-            // Configurar modais
-            const modals = document.querySelectorAll('.modal');
-            const openFormBtn = document.getElementById('openFormBtn');
-            const manageDataBtn = document.getElementById('manageDataBtn');
-            const firebaseActionsBtn = document.getElementById('firebaseActionsBtn');
-            const closeFormBtn = document.getElementById('closeFormBtn');
-            const formModal = document.getElementById('formModal');
-            const manageModal = document.getElementById('manageModal');
-            const firebaseModal = document.getElementById('firebaseModal');
+            try {
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                await window.firebaseSet(dataRef, initialData);
+                
+                // Também criar um backup
+                await saveDataToFirebase();
+                
+                console.log("Dados salvos e notificação enviada para outros dispositivos");
+            } catch (error) {
+                console.error("Erro ao salvar dados e notificar:", error);
+            }
+        }
+
+        // Função para carregar a lista de backups
+        async function loadBackupList() {
+            if (!firebaseReady) {
+                document.getElementById('backup-list').innerHTML = '<p>Firebase ainda não está pronto</p>';
+                return;
+            }
             
-            // Abrir modais
-            openFormBtn.addEventListener('click', () => formModal.style.display = 'block');
-            manageDataBtn.addEventListener('click', () => manageModal.style.display = 'block');
-            firebaseActionsBtn.addEventListener('click', () => {
-                firebaseModal.style.display = 'block';
-                listBackups();
+            try {
+                const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                const snapshot = await window.firebaseGet(backupRef);
+                const backupList = document.getElementById('backup-list');
+                
+                if (snapshot.exists()) {
+                    const backups = snapshot.val();
+                    const backupKeys = Object.keys(backups);
+                    
+                    backupList.innerHTML = '';
+                    
+                    backupKeys.forEach(key => {
+                        const backup = backups[key];
+                        const date = new Date(backup.timestamp).toLocaleString();
+                        
+                        const backupItem = document.createElement('div');
+                        backupItem.style.padding = '8px';
+                        backupItem.style.borderBottom = '1px solid #eee';
+                        backupItem.innerHTML = `
+                            <strong>${key}</strong> (${date})
+                            <button class="btn btn-small" onclick="loadDataFromFirebase('${key}')" style="padding: 2px 5px; font-size: 12px;">
+                                <i class="fas fa-download"></i> Carregar
+                            </button>
+                            <button class="btn btn-delete" onclick="deleteBackup('${key}')" style="padding: 2px 5px; font-size: 12px;">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
+                        `;
+                        
+                        backupList.appendChild(backupItem);
+                    });
+                } else {
+                    backupList.innerHTML = '<p>Nenhum backup encontrado</p>';
+                }
+            } catch (error) {
+                console.error("Erro ao carregar lista de backups:", error);
+                document.getElementById('backup-list').innerHTML = '<p>Erro ao carregar backups</p>';
+            }
+        }
+
+        // Função para excluir um backup
+        async function deleteBackup(backupName) {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto.');
+                return;
+            }
+            
+            if (confirm(`Tem certeza que deseja excluir o backup "${backupName}"?`)) {
+                try {
+                    const backupRef = window.firebaseRef(window.firebaseDatabase, 'backups/' + backupName);
+                    await window.firebaseRemove(backupRef);
+                    
+                    alert('Backup excluído com sucesso!');
+                    loadBackupList();
+                } catch (error) {
+                    console.error("Erro ao excluir backup:", error);
+                    alert('Erro ao excluir backup: ' + error.message);
+                }
+            }
+        }
+
+        // Função para limpar todos os dados do Firebase
+        async function clearFirebaseData() {
+            if (!firebaseReady) {
+                alert('Firebase ainda não está pronto.');
+                return;
+            }
+            
+            if (confirm('Tem certeza que deseja limpar TODOS os dados do Firebase? Esta ação não pode ser desfeita.')) {
+                try {
+                    const dataRef = window.firebaseRef(window.firebaseDatabase, 'backups');
+                    await window.firebaseRemove(dataRef);
+                    
+                    alert('Dados do Firebase limpos com sucesso!');
+                    loadBackupList();
+                } catch (error) {
+                    console.error("Erro ao limpar dados do Firebase:", error);
+                    alert('Erro ao limpar dados: ' + error.message);
+                }
+            }
+        }
+
+        // Função para preencher as tabelas com dados
+        function fillTables() {
+            const sistemas = ['accessorias', 'sittax', 'openix'];
+            const periodos = getAllPeriods();
+            
+            // Atualizar selects de período
+            updatePeriodSelects();
+            
+            sistemas.forEach(sistema => {
+                const table = document.getElementById(`${sistema}-table`);
+                const thead = table.querySelector('thead');
+                const tbody = table.querySelector('tbody');
+                
+                // Limpar e reconstruir o cabeçalho
+                thead.innerHTML = '';
+                let headerHtml = '<tr><th>Ações</th><th>Indicador</th>';
+                
+                periodos.forEach(periodo => {
+                    headerHtml += `<th class="editable-header" data-period="${periodo}">
+                        ${periodo} 
+                        <button class="delete-btn delete-btn-column" data-period="${periodo}" data-system="${sistema}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </th>`;
+                });
+                
+                headerHtml += '</tr>';
+                thead.innerHTML = headerHtml;
+                
+                // Limpar e reconstruir o corpo
+                tbody.innerHTML = '';
+                
+                // Dados para preencher a tabela
+                const rows = [
+                    { label: 'Clientes ativos (mês anterior)', key: 'clientesAtivos', format: 'number' },
+                    { label: 'Novos Contratos', key: 'novosContratos', format: 'number' },
+                    { label: 'Montante Inventariado', key: 'montante', format: 'currency' },
+                    { label: 'Solicitações de Cancelamento', key: 'solicitacoes', format: 'number' },
+                    { label: 'Cancelamentos Confirmados via CS', key: 'confirmados', format: 'number' },
+                    { label: 'Cancelamentos Automáticos (inadimplência)', key: 'automaticos', format: 'number' },
+                    { label: 'Clientes cancelados e inadimplência', key: 'cancelados', format: 'number' },
+                    { label: '% Churn', key: 'churn', format: 'percent' },
+                    { label: 'Montante Cancelado', key: 'montanteCancelado', format: 'currency' }
+                ];
+                
+                rows.forEach((row, rowIndex) => {
+                    const tr = document.createElement('tr');
+                    let html = `<td class="row-actions">
+                        <button class="action-btn delete-row-btn" data-row="${rowIndex}" data-system="${sistema}" title="Excluir linha">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>`;
+                    html += `<td>${row.label}</td>`;
+                    
+                    periodos.forEach(periodo => {
+                        const data = initialData[sistema] && initialData[sistema][periodo] ? initialData[sistema][periodo][row.key] : '';
+                        
+                        if (editMode) {
+                            // Modo de edição - criar campos de entrada
+                            if (row.format === 'currency') {
+                                html += `<td><input type="text" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0,00"></td>`;
+                            } else if (row.format === 'percent') {
+                                html += `<td><input type="number" step="0.01" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0.00"></td>`;
+                            } else {
+                                html += `<td><input type="number" class="editable" value="${data || ''}" data-sistema="${sistema}" data-periodo="${periodo}" data-key="${row.key}" placeholder="0"></td>`;
+                            }
+                        } else {
+                            // Modo de visualização - apenas exibir dados
+                            if (row.format === 'currency') {
+                                html += `<td>${data ? 'R$ ' + data : ''}</td>`;
+                            } else if (row.format === 'percent') {
+                                html += `<td>${data ? data + '%' : ''}</td>`;
+                            } else {
+                                html += `<td>${data}</td>`;
+                            }
+                        }
+                    });
+                    
+                    tr.innerHTML = html;
+                    tbody.appendChild(tr);
+                });
             });
             
-            // Fechar modais
-            modals.forEach(modal => {
-                const closeBtn = modal.querySelector('.close');
-                closeBtn.addEventListener('click', () => modal.style.display = 'none');
-            });
-            
-            closeFormBtn.addEventListener('click', () => formModal.style.display = 'none');
-            
-            // Fechar modais clicando fora deles
-            window.addEventListener('click', (event) => {
-                modals.forEach(modal => {
-                    if (event.target === modal) {
-                        modal.style.display = 'none';
+            // Adicionar event listeners para os cabeçalhos editáveis
+            document.querySelectorAll('.editable-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const periodo = this.getAttribute('data-period');
+                    editingHeader = periodo;
+                    
+                    const newName = prompt('Editar período:', periodo);
+                    if (newName && newName.trim() !== '') {
+                        renamePeriod(periodo, newName.trim());
                     }
                 });
             });
             
-            // Configurar formulário
-            const dataForm = document.getElementById('data-form');
-            dataForm.addEventListener('submit', function(e) {
+            // Adicionar event listeners para os botões de exclusão de coluna
+            document.querySelectorAll('.delete-btn-column').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const periodo = this.getAttribute('data-period');
+                    const sistema = this.getAttribute('data-system');
+                    
+                    if (confirm(`Tem certeza que deseja excluir o período ${periodo} do sistema ${sistema}?`)) {
+                        deletePeriod(periodo, sistema);
+                    }
+                });
+            });
+            
+            // Adicionar event listeners para os botões de exclusão de linha
+            document.querySelectorAll('.delete-row-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rowIndex = this.getAttribute('data-row');
+                    const sistema = this.getAttribute('data-system');
+                    
+                    if (confirm('Tem certeza que deseja excluir esta linha?')) {
+                        deleteRow(rowIndex, sistema);
+                    }
+                });
+            });
+        }
+
+        // Dados dos gráficos
+        const churnData = {
+            labels: ['Acessorias', 'Sittax', 'Openix'],
+            datasets: [{
+                label: 'Taxa de Churn (%)',
+                data: [3.21, 6.88, 10.31],
+                backgroundColor: [
+                    'rgba(52, 152, 219, 0.7)',
+                    'rgba(46, 204, 113, 0.7)',
+                    'rgba(155, 89, 182, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(52, 152, 219, 1)',
+                    'rgba(46, 204, 113, 1)',
+                    'rgba(155, 89, 182, 1)'
+                ],
+                borderWidth: 2
+            }]
+        };
+
+        const evolutionConfig = {
+            type: 'line',
+            data: {
+                labels: ['Jan-24', 'Fev-24', 'Mar-24', 'Abr-24', 'Mai-24'],
+                datasets: [
+                    {
+                        label: 'Acessorias',
+                        data: [3.21, 3.19, 2.95, 3.12, 2.87],
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Sittax',
+                        data: [6.88, 6.69, 7.12, 6.45, 6.78],
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Openix',
+                        data: [10.31, 9.50, 11.23, 9.87, 10.45],
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Taxa de Churn (%)'
+                        }
+                    }
+                }
+            }
+        };
+
+        const distributionConfig = {
+            type: 'bar',
+            data: {
+                labels: ['Solicitações', 'Confirmados CS', 'Automáticos'],
+                datasets: [
+                    {
+                        label: 'Acessorias',
+                        data: [52, 54, 10],
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    },
+                    {
+                        label: 'Sittax',
+                        data: [52, 56, 13],
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                    },
+                    {
+                        label: 'Openix',
+                        data: [14, 37, 10],
+                        backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantidade'
+                        }
+                    }
+                }
+            }
+        };
+
+        // Configurações dos gráficos
+        const churnConfig = {
+            type: 'bar',
+            data: churnData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Taxa de Churn (%)'
+                        }
+                    }
+                }
+            }
+        };
+
+        // Função para atualizar gráficos
+        function updateCharts() {
+            // Esta função seria implementada para atualizar os gráficos com os novos dados
+            console.log("Gráficos atualizados");
+        }
+
+        // Inicializar a aplicação quando a página carregar
+        window.onload = async function() {
+            // Aguardar Firebase estar pronto
+            if (firebaseReady) {
+                await initializeApp();
+            } else {
+                window.addEventListener('firebaseReady', initializeApp);
+            }
+        };
+
+        async function initializeApp() {
+            // Testar conexão com Firebase
+            await testFirebaseConnection();
+            
+            // Configurar listener em tempo real
+            setupRealtimeListener();
+            
+            // Tentar carregar dados do Firebase
+            try {
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                const snapshot = await window.firebaseGet(dataRef);
+                
+                if (snapshot.exists()) {
+                    initialData = snapshot.val();
+                    console.log("Dados carregados do Firebase");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firebase:", error);
+            }
+            
+            // Preencher as tabelas com dados
+            fillTables();
+            
+            // Inicializar gráficos
+            new Chart(document.getElementById('churnChart'), churnConfig);
+            new Chart(document.getElementById('evolutionChart'), evolutionConfig);
+            new Chart(document.getElementById('distributionChart'), distributionConfig);
+            
+            // Configurar modais e eventos
+            setupModals();
+            setupEventListeners();
+        }
+
+        function setupModals() {
+            // Configurar modal do formulário
+            const modal = document.getElementById("formModal");
+            const openBtn = document.getElementById("openFormBtn");
+            const closeBtn = document.getElementById("closeFormBtn");
+            const span = modal.querySelector(".close");
+            
+            openBtn.onclick = function() {
+                modal.style.display = "block";
+            }
+            
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+            
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+            
+            // Configurar modal de gerenciamento
+            const manageModal = document.getElementById("manageModal");
+            const manageBtn = document.getElementById("manageDataBtn");
+            const manageClose = manageModal.querySelector(".close");
+            
+            manageBtn.onclick = function() {
+                manageModal.style.display = "block";
+            }
+            
+            manageClose.onclick = function() {
+                manageModal.style.display = "none";
+            }
+            
+            // Configurar modal do Firebase
+            const firebaseModal = document.getElementById("firebaseModal");
+            const firebaseBtn = document.getElementById("firebaseActionsBtn");
+            const firebaseClose = firebaseModal.querySelector(".close");
+            
+            firebaseBtn.onclick = function() {
+                firebaseModal.style.display = "block";
+                loadBackupList();
+            }
+            
+            firebaseClose.onclick = function() {
+                firebaseModal.style.display = "none";
+            }
+            
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+                if (event.target == manageModal) {
+                    manageModal.style.display = "none";
+                }
+                if (event.target == firebaseModal) {
+                    firebaseModal.style.display = "none";
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            // Adicionar evento de submit ao formulário
+            document.getElementById('data-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const periodo = document.getElementById('data-periodo').value;
@@ -1760,98 +1799,126 @@
                     montanteCancelado: document.getElementById('data-montante-cancelado').value
                 };
                 
-                // Adicionar aos dados iniciais
+                // Adicionar dados ao objeto initialData
                 if (!initialData[sistema]) {
                     initialData[sistema] = {};
                 }
                 
                 initialData[sistema][periodo] = formData;
                 
-                // Atualizar tabelas e gráficos
-                populateTables();
-                initCharts();
+                // Atualizar a tabela correspondente
+                fillTables();
                 
-                // Fechar modal e resetar formulário
-                formModal.style.display = 'none';
-                dataForm.reset();
+                // Salvar no Firebase e notificar outros dispositivos
+                saveDataAndNotify();
                 
                 alert('Dados salvos com sucesso!');
+                document.getElementById("formModal").style.display = "none";
+                
+                // Limpar formulário
+                document.getElementById('data-form').reset();
             });
             
             // Configurar botão de edição
-            const editTableBtn = document.getElementById('editTableBtn');
-            editTableBtn.addEventListener('click', toggleEditMode);
-            
-            // Configurar botões de gerenciamento de período
-            const addPeriodBtn = document.getElementById('addPeriodBtn');
-            const deletePeriodBtn = document.getElementById('deletePeriodBtn');
-            const renamePeriodBtn = document.getElementById('renamePeriodBtn');
-            
-            addPeriodBtn.addEventListener('click', function() {
-                const newPeriod = document.getElementById('new-period').value;
-                const system = document.getElementById('add-period-system').value;
+            const editBtn = document.getElementById("editTableBtn");
+            editBtn.addEventListener('click', function() {
+                editMode = !editMode;
                 
-                if (!newPeriod) {
-                    alert('Por favor, informe um período.');
-                    return;
+                if (editMode) {
+                    editBtn.textContent = 'Salvar Edições';
+                    editBtn.style.backgroundColor = '#27ae60';
+                } else {
+                    editBtn.textContent = 'Editar Tabela';
+                    editBtn.style.backgroundColor = '#f39c12';
+                    
+                    // Salvar alterações feitas nos campos de edição
+                    const editFields = document.querySelectorAll('.editable');
+                    editFields.forEach(field => {
+                        const sistema = field.getAttribute('data-sistema');
+                        const periodo = field.getAttribute('data-periodo');
+                        const key = field.getAttribute('data-key');
+                        const value = field.value;
+                        
+                        if (!initialData[sistema][periodo]) {
+                            initialData[sistema][periodo] = {};
+                        }
+                        
+                        initialData[sistema][periodo][key] = value;
+                    });
+                    
+                    // Salvar no Firebase e notificar outros dispositivos
+                    saveDataAndNotify();
+                    
+                    alert('Alterações salvas com sucesso!');
                 }
                 
-                const systems = system === 'all' ? ['accessorias', 'sittax', 'openix'] : [system];
-                
-                systems.forEach(sys => {
-                    if (!initialData[sys][newPeriod]) {
-                        initialData[sys][newPeriod] = {};
-                    }
-                });
-                
-                populateTables();
-                document.getElementById('new-period').value = '';
-            });
-            
-            deletePeriodBtn.addEventListener('click', function() {
-                const period = document.getElementById('delete-period').value;
-                const system = document.getElementById('delete-period-system').value;
-                
-                if (!period) {
-                    alert('Por favor, selecione um período.');
-                    return;
-                }
-                
-                deletePeriod(period, system);
-            });
-            
-            renamePeriodBtn.addEventListener('click', function() {
-                const oldPeriod = document.getElementById('rename-period-old').value;
-                const newPeriod = document.getElementById('rename-period-new').value;
-                const system = document.getElementById('rename-period-system').value;
-                
-                if (!oldPeriod || !newPeriod) {
-                    alert('Por favor, preencha ambos os campos de período.');
-                    return;
-                }
-                
-                const systems = system === 'all' ? ['accessorias', 'sittax', 'openix'] : [system];
-                
-                systems.forEach(sys => {
-                    if (initialData[sys] && initialData[sys][oldPeriod]) {
-                        initialData[sys][newPeriod] = initialData[sys][oldPeriod];
-                        delete initialData[sys][oldPeriod];
-                    }
-                });
-                
-                populateTables();
-                document.getElementById('rename-period-new').value = '';
+                // Atualizar as tabelas
+                fillTables();
             });
             
             // Configurar botões do Firebase
-            const saveToFirebaseBtn = document.getElementById('saveToFirebaseBtn');
-            const loadFromFirebaseBtn = document.getElementById('loadFromFirebaseBtn');
-            const clearFirebaseBtn = document.getElementById('clearFirebaseBtn');
+            document.getElementById('saveToFirebaseBtn').addEventListener('click', saveDataToFirebase);
+            document.getElementById('loadFromFirebaseBtn').addEventListener('click', () => loadDataFromFirebase());
+            document.getElementById('clearFirebaseBtn').addEventListener('click', clearFirebaseData);
             
-            saveToFirebaseBtn.addEventListener('click', saveToFirebase);
-            loadFromFirebaseBtn.addEventListener('click', () => loadFromFirebase());
-            clearFirebaseBtn.addEventListener('click', clearFirebase);
-        });
+            // Configurar botão de adicionar período
+            document.getElementById('addPeriodBtn').addEventListener('click', function() {
+                const newPeriod = document.getElementById('new-period').value;
+                const sistema = document.getElementById('add-period-system').value;
+                
+                if (newPeriod) {
+                    addPeriod(newPeriod, sistema);
+                    document.getElementById('new-period').value = '';
+                } else {
+                    alert('Por favor, informe um nome para o novo período.');
+                }
+            });
+            
+            // Configurar botão de excluir período
+            document.getElementById('deletePeriodBtn').addEventListener('click', function() {
+                const periodo = document.getElementById('delete-period').value;
+                const sistema = document.getElementById('delete-period-system').value;
+                
+                if (periodo) {
+                    if (confirm(`Tem certeza que deseja excluir o período ${periodo}?`)) {
+                        deletePeriod(periodo, sistema);
+                    }
+                } else {
+                    alert('Por favor, selecione um período para excluir.');
+                }
+            });
+            
+            // Configurar botão de renomear período
+            document.getElementById('renamePeriodBtn').addEventListener('click', function() {
+                const oldName = document.getElementById('rename-period-old').value;
+                const newName = document.getElementById('rename-period-new').value;
+                const sistema = document.getElementById('rename-period-system').value;
+                
+                if (oldName && newName) {
+                    // Validar formato do novo período
+                    const periodRegex = /^(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)-\d{2}$/;
+                    if (!periodRegex.test(newName)) {
+                        alert('Formato de período inválido. Use o formato Mmm-AA (ex: Jan-25)');
+                        return;
+                    }
+                    
+                    if (sistema === 'all') {
+                        renamePeriod(oldName, newName);
+                    } else {
+                        // Para um sistema específico, precisamos fazer uma cópia manual
+                        if (initialData[sistema] && initialData[sistema][oldName]) {
+                            initialData[sistema][newName] = initialData[sistema][oldName];
+                            delete initialData[sistema][oldName];
+                            fillTables();
+                            saveDataAndNotify();
+                        }
+                    }
+                    document.getElementById('rename-period-new').value = '';
+                } else {
+                    alert('Por favor, selecione um período e informe um novo nome.');
+                }
+            });
+        }
     </script>
 </body>
 </html>
