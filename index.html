@@ -1054,16 +1054,23 @@
 
         // Função para obter todos os períodos únicos
         function getAllPeriods() {
-            const periods = new Set();
-            
-            Object.keys(initialData).forEach(sistema => {
-                Object.keys(initialData[sistema]).forEach(periodo => {
-                    periods.add(periodo);
-                });
-            });
-            
-            return Array.from(periods).sort();
-        }
+    const periods = new Set();
+
+    Object.keys(initialData).forEach(sistema => {
+        Object.keys(initialData[sistema]).forEach(periodo => {
+            periods.add(periodo);
+        });
+    });
+
+    const monthOrder = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+    return Array.from(periods).sort((a,b) => {
+        const [ma, ya] = a.split("-");
+        const [mb, yb] = b.split("-");
+        if (ya !== yb) return parseInt(ya) - parseInt(yb); // ordena ano
+        return monthOrder.indexOf(ma) - monthOrder.indexOf(mb); // ordena mês
+    });
+}
 
         // Função para atualizar selects de período
         function updatePeriodSelects() {
@@ -1284,6 +1291,7 @@
                     
                     alert('Dados carregados do Firebase com sucesso!');
                     fillTables();
+                    saveDataAndNotify();
                     updateCharts();
                 } else {
                     throw new Error("Backup não encontrado");
@@ -1310,6 +1318,7 @@
                         const newData = snapshot.val();
                         initialData = newData;
                         fillTables();
+                        saveDataAndNotify();
                         updateCharts();
                         console.log("Dados atualizados em tempo real do Firebase");
                     }
@@ -1672,8 +1681,15 @@
 
         // Função para atualizar gráficos
         function updateCharts() {
-            // Esta função seria implementada para atualizar os gráficos com os novos dados
-            console.log("Gráficos atualizados");
+    if (churnChartInstance) churnChartInstance.destroy();
+    if (evolutionChartInstance) evolutionChartInstance.destroy();
+    if (distributionChartInstance) distributionChartInstance.destroy();
+
+    churnChartInstance = new Chart(document.getElementById('churnChart'), churnConfig);
+    evolutionChartInstance = new Chart(document.getElementById('evolutionChart'), evolutionConfig);
+    distributionChartInstance = new Chart(document.getElementById('distributionChart'), distributionConfig);
+
+    console.log("Gráficos atualizados");
         }
 
         // Inicializar a aplicação quando a página carregar
