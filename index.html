@@ -642,13 +642,6 @@
             Procure por "SUA_API_KEY_AQUI" e substitua pelas suas credenciais do Firebase.</p>
         </div>
         
-        <div class="button-group">
-            <button class="btn btn-form" id="openFormBtn" disabled>Abrir Formulário de Dados</button>
-            <button class="btn btn-edit" id="editTableBtn" disabled>Editar Tabela</button>
-            <button class="btn btn-delete" id="manageDataBtn" disabled>Gerenciar Dados</button>
-            <button class="btn btn-firebase" id="firebaseActionsBtn" disabled>Ações Firebase</button>
-        </div>
-        
         <!-- Resumo por Sistema (NOVO) -->
         <div class="system-summary">
             <div class="system-card accessorias">
@@ -704,6 +697,13 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn btn-form" id="openFormBtn">Abrir Formulário de Dados</button>
+            <button class="btn btn-edit" id="editTableBtn">Editar Tabela</button>
+            <button class="btn btn-delete" id="manageDataBtn">Gerenciar Dados</button>
+            <button class="btn btn-firebase" id="firebaseActionsBtn">Ações Firebase</button>
         </div>
         
         <div class="tabs">
@@ -1042,6 +1042,7 @@
         let editMode = false;
         let editingHeader = null;
         let firebaseReady = false;
+        let churnChartInstance, evolutionChartInstance, distributionChartInstance;
         
         // Dados iniciais (exemplo)
         let initialData = {
@@ -1120,19 +1121,25 @@
         };
 
         // Aguardar inicialização do Firebase
-        window.addEventListener('firebaseReady', function() {
+        if (window.firebaseInitialized) {
+            console.log('Firebase já inicializado');
             firebaseReady = true;
-            console.log('Firebase inicializado com sucesso');
-            
-            // Habilitar botões
             enableButtons();
-            
-            // Ocultar aviso de configuração se as credenciais foram configuradas
-            checkFirebaseConfig();
-            
-            // Testar conexão
-            testFirebaseConnection();
-        });
+        } else {
+            window.addEventListener('firebaseReady', function() {
+                firebaseReady = true;
+                console.log('Firebase inicializado com sucesso');
+                
+                // Habilitar botões
+                enableButtons();
+                
+                // Ocultar aviso de configuração se as credenciais foram configuradas
+                checkFirebaseConfig();
+                
+                // Testar conexão
+                testFirebaseConnection();
+            });
+        }
 
         // Função para calcular totais por sistema
         function calculateSystemTotals() {
@@ -1149,8 +1156,18 @@
                     
                     // Converter valores de string para número
                     const cancelados = parseInt(dados.cancelados || '0');
-                    const montante = parseFloat(dados.montante?.replace(/\./g, '').replace(',', '.') || '0');
-                    const montanteCancelado = parseFloat(dados.montanteCancelado?.replace(/\./g, '').replace(',', '.') || '0');
+                    
+                    // Converter valores monetários de string para número
+                    let montante = 0;
+                    let montanteCancelado = 0;
+                    
+                    if (dados.montante) {
+                        montante = parseFloat(dados.montante.replace(/\./g, '').replace(',', '.'));
+                    }
+                    
+                    if (dados.montanteCancelado) {
+                        montanteCancelado = parseFloat(dados.montanteCancelado.replace(/\./g, '').replace(',', '.'));
+                    }
                     
                     totalCancelados += cancelados;
                     totalMontante += montante;
@@ -1488,7 +1505,7 @@
             }
         }
 
-        // Função para salvar dados e notificar outros dispositivos
+        // Função para salvar dados и notify outros dispositivos
         async function saveDataAndNotify() {
             if (!firebaseReady) {
                 console.log("Firebase ainda não está pronto para salvar dados");
@@ -1854,42 +1871,18 @@
         }
 
         // Inicializar a aplicação quando a página carregar
-        window.onload = async function() {
-            // Aguardar Firebase estar pronto
-            if (firebaseReady) {
-                await initializeApp();
-            } else {
-                window.addEventListener('firebaseReady', initializeApp);
-            }
-        };
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
 
         async function initializeApp() {
-            // Testar conexão com Firebase
-            await testFirebaseConnection();
-            
-            // Configurar listener em tempo real
-            setupRealtimeListener();
-            
-            // Tentar carregar dados do Firebase
-            try {
-                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
-                const snapshot = await window.firebaseGet(dataRef);
-                
-                if (snapshot.exists()) {
-                    initialData = snapshot.val();
-                    console.log("Dados carregados do Firebase");
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados do Firebase:", error);
-            }
-            
             // Preencher as tabelas com dados
             fillTables();
             
             // Inicializar gráficos
-            new Chart(document.getElementById('churnChart'), churnConfig);
-            new Chart(document.getElementById('evolutionChart'), evolutionConfig);
-            new Chart(document.getElementById('distributionChart'), distributionConfig);
+            churnChartInstance = new Chart(document.getElementById('churnChart'), churnConfig);
+            evolutionChartInstance = new Chart(document.getElementById('evolutionChart'), evolutionConfig);
+            distributionChartInstance = new Chart(document.getElementById('distributionChart'), distributionConfig);
             
             // Configurar modais e eventos
             setupModals();
@@ -1897,6 +1890,30 @@
             
             // Calcular totais dos sistemas
             calculateSystemTotals();
+            
+            // Testar conexão com Firebase se estiver disponível
+            if (firebaseReady) {
+                await testFirebaseConnection();
+                
+                // Configurar listener em tempo real
+                setupRealtimeListener();
+                
+                // Tentar carregar dados do Firebase
+                try {
+                    const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                    const snapshot = await window.firebaseGet(dataRef);
+                    
+                    if (snapshot.exists()) {
+                        initialData = snapshot.val();
+                        console.log("Dados carregados do Firebase");
+                        fillTables();
+                        updateCharts();
+                        calculateSystemTotals();
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar dados do Firebase:", error);
+                }
+            }
         }
 
         function setupModals() {
