@@ -190,62 +190,6 @@
             color: #e74c3c;
         }
         
-        .system-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .system-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            transition: transform 0.3s ease;
-        }
-        
-        .system-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .system-card.accessorias {
-            border-top: 5px solid #3498db;
-        }
-        
-        .system-card.sittax {
-            border-top: 5px solid #2ecc71;
-        }
-        
-        .system-card.openix {
-            border-top: 5px solid #9b59b6;
-        }
-        
-        .system-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .system-stat {
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-        }
-        
-        .system-stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-        
-        .system-stat-label {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        
         .tabs {
             display: flex;
             margin-bottom: 20px;
@@ -570,14 +514,6 @@
                 grid-template-columns: 1fr;
             }
             
-            .system-summary {
-                grid-template-columns: 1fr;
-            }
-            
-            .system-stats {
-                grid-template-columns: 1fr;
-            }
-            
             .tabs {
                 flex-direction: column;
             }
@@ -642,68 +578,11 @@
             Procure por "SUA_API_KEY_AQUI" e substitua pelas suas credenciais do Firebase.</p>
         </div>
         
-        <!-- Resumo por Sistema (NOVO) -->
-        <div class="system-summary">
-            <div class="system-card accessorias">
-                <h3 class="card-title">Acessorias - Total Geral</h3>
-                <div class="system-stats">
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Cancelados</div>
-                        <div class="system-stat-value" id="acessorias-total-cancelados">0</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante</div>
-                        <div class="system-stat-value" id="acessorias-total-montante">R$ 0,00</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante Cancelado</div>
-                        <div class="system-stat-value" id="acessorias-total-montante-cancelado">R$ 0,00</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="system-card sittax">
-                <h3 class="card-title">Sittax - Total Geral</h3>
-                <div class="system-stats">
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Cancelados</div>
-                        <div class="system-stat-value" id="sittax-total-cancelados">0</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante</div>
-                        <div class="system-stat-value" id="sittax-total-montante">R$ 0,00</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante Cancelado</div>
-                        <div class="system-stat-value" id="sittax-total-montante-cancelado">R$ 0,00</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="system-card openix">
-                <h3 class="card-title">Openix - Total Geral</h3>
-                <div class="system-stats">
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Cancelados</div>
-                        <div class="system-stat-value" id="openix-total-cancelados">0</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante</div>
-                        <div class="system-stat-value" id="openix-total-montante">R$ 0,00</div>
-                    </div>
-                    <div class="system-stat">
-                        <div class="system-stat-label">Total Montante Cancelado</div>
-                        <div class="system-stat-value" id="openix-total-montante-cancelado">R$ 0,00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <div class="button-group">
-            <button class="btn btn-form" id="openFormBtn">Abrir Formulário de Dados</button>
-            <button class="btn btn-edit" id="editTableBtn">Editar Tabela</button>
-            <button class="btn btn-delete" id="manageDataBtn">Gerenciar Dados</button>
-            <button class="btn btn-firebase" id="firebaseActionsBtn">Ações Firebase</button>
+            <button class="btn btn-form" id="openFormBtn" disabled>Abrir Formulário de Dados</button>
+            <button class="btn btn-edit" id="editTableBtn" disabled>Editar Tabela</button>
+            <button class="btn btn-delete" id="manageDataBtn" disabled>Gerenciar Dados</button>
+            <button class="btn btn-firebase" id="firebaseActionsBtn" disabled>Ações Firebase</button>
         </div>
         
         <div class="tabs">
@@ -1042,7 +921,6 @@
         let editMode = false;
         let editingHeader = null;
         let firebaseReady = false;
-        let churnChartInstance, evolutionChartInstance, distributionChartInstance;
         
         // Dados iniciais (exemplo)
         let initialData = {
@@ -1121,70 +999,19 @@
         };
 
         // Aguardar inicialização do Firebase
-        if (window.firebaseInitialized) {
-            console.log('Firebase já inicializado');
+        window.addEventListener('firebaseReady', function() {
             firebaseReady = true;
-            enableButtons();
-        } else {
-            window.addEventListener('firebaseReady', function() {
-                firebaseReady = true;
-                console.log('Firebase inicializado com sucesso');
-                
-                // Habilitar botões
-                enableButtons();
-                
-                // Ocultar aviso de configuração se as credenciais foram configuradas
-                checkFirebaseConfig();
-                
-                // Testar conexão
-                testFirebaseConnection();
-            });
-        }
-
-        // Função para calcular totais por sistema
-        function calculateSystemTotals() {
-            const sistemas = ['accessorias', 'sittax', 'openix'];
+            console.log('Firebase inicializado com sucesso');
             
-            sistemas.forEach(sistema => {
-                let totalCancelados = 0;
-                let totalMontante = 0;
-                let totalMontanteCancelado = 0;
-                
-                // Calcular totais para cada sistema
-                Object.keys(initialData[sistema] || {}).forEach(periodo => {
-                    const dados = initialData[sistema][periodo];
-                    
-                    // Converter valores de string para número
-                    const cancelados = parseInt(dados.cancelados || '0');
-                    
-                    // Converter valores monetários de string para número
-                    let montante = 0;
-                    let montanteCancelado = 0;
-                    
-                    if (dados.montante) {
-                        montante = parseFloat(dados.montante.replace(/\./g, '').replace(',', '.'));
-                    }
-                    
-                    if (dados.montanteCancelado) {
-                        montanteCancelado = parseFloat(dados.montanteCancelado.replace(/\./g, '').replace(',', '.'));
-                    }
-                    
-                    totalCancelados += cancelados;
-                    totalMontante += montante;
-                    totalMontanteCancelado += montanteCancelado;
-                });
-                
-                // Atualizar os elementos HTML com os totais
-                document.getElementById(`${sistema}-total-cancelados`).textContent = totalCancelados.toLocaleString('pt-BR');
-                document.getElementById(`${sistema}-total-montante`).textContent = formatCurrency(totalMontante);
-                document.getElementById(`${sistema}-total-montante-cancelado`).textContent = formatCurrency(totalMontanteCancelado);
-            });
-        }
-
-        // Função para formatar valores monetários
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        }
+            // Habilitar botões
+            enableButtons();
+            
+            // Ocultar aviso de configuração se as credenciais foram configuradas
+            checkFirebaseConfig();
+            
+            // Testar conexão
+            testFirebaseConnection();
+        });
 
         // Função para habilitar botões após inicialização do Firebase
         function enableButtons() {
@@ -1227,23 +1054,23 @@
 
         // Função para obter todos os períodos únicos
         function getAllPeriods() {
-            const periods = new Set();
+    const periods = new Set();
 
-            Object.keys(initialData).forEach(sistema => {
-                Object.keys(initialData[sistema]).forEach(periodo => {
-                    periods.add(periodo);
-                });
-            });
+    Object.keys(initialData).forEach(sistema => {
+        Object.keys(initialData[sistema]).forEach(periodo => {
+            periods.add(periodo);
+        });
+    });
 
-            const monthOrder = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const monthOrder = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-            return Array.from(periods).sort((a,b) => {
-                const [ma, ya] = a.split("-");
-                const [mb, yb] = b.split("-");
-                if (ya !== yb) return parseInt(ya) - parseInt(yb); // ordena ano
-                return monthOrder.indexOf(ma) - monthOrder.indexOf(mb); // ordena mês
-            });
-        }
+    return Array.from(periods).sort((a,b) => {
+        const [ma, ya] = a.split("-");
+        const [mb, yb] = b.split("-");
+        if (ya !== yb) return parseInt(ya) - parseInt(yb); // ordena ano
+        return monthOrder.indexOf(ma) - monthOrder.indexOf(mb); // ordena mês
+    });
+}
 
         // Função para atualizar selects de período
         function updatePeriodSelects() {
@@ -1466,7 +1293,6 @@
                     fillTables();
                     saveDataAndNotify();
                     updateCharts();
-                    calculateSystemTotals(); // Calcular totais após carregar dados
                 } else {
                     throw new Error("Backup não encontrado");
                 }
@@ -1494,7 +1320,6 @@
                         fillTables();
                         saveDataAndNotify();
                         updateCharts();
-                        calculateSystemTotals(); // Calcular totais após atualização
                         console.log("Dados atualizados em tempo real do Firebase");
                     }
                 });
@@ -1505,7 +1330,7 @@
             }
         }
 
-        // Função para salvar dados и notify outros dispositivos
+        // Função para salvar dados e notificar outros dispositivos
         async function saveDataAndNotify() {
             if (!firebaseReady) {
                 console.log("Firebase ainda não está pronto para salvar dados");
@@ -1733,9 +1558,6 @@
                     }
                 });
             });
-            
-            // Calcular totais após preencher as tabelas
-            calculateSystemTotals();
         }
 
         // Dados dos gráficos
@@ -1859,61 +1681,58 @@
 
         // Função para atualizar gráficos
         function updateCharts() {
-            if (churnChartInstance) churnChartInstance.destroy();
-            if (evolutionChartInstance) evolutionChartInstance.destroy();
-            if (distributionChartInstance) distributionChartInstance.destroy();
+    if (churnChartInstance) churnChartInstance.destroy();
+    if (evolutionChartInstance) evolutionChartInstance.destroy();
+    if (distributionChartInstance) distributionChartInstance.destroy();
 
-            churnChartInstance = new Chart(document.getElementById('churnChart'), churnConfig);
-            evolutionChartInstance = new Chart(document.getElementById('evolutionChart'), evolutionConfig);
-            distributionChartInstance = new Chart(document.getElementById('distributionChart'), distributionConfig);
+    churnChartInstance = new Chart(document.getElementById('churnChart'), churnConfig);
+    evolutionChartInstance = new Chart(document.getElementById('evolutionChart'), evolutionConfig);
+    distributionChartInstance = new Chart(document.getElementById('distributionChart'), distributionConfig);
 
-            console.log("Gráficos atualizados");
+    console.log("Gráficos atualizados");
         }
 
         // Inicializar a aplicação quando a página carregar
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
+        window.onload = async function() {
+            // Aguardar Firebase estar pronto
+            if (firebaseReady) {
+                await initializeApp();
+            } else {
+                window.addEventListener('firebaseReady', initializeApp);
+            }
+        };
 
         async function initializeApp() {
+            // Testar conexão com Firebase
+            await testFirebaseConnection();
+            
+            // Configurar listener em tempo real
+            setupRealtimeListener();
+            
+            // Tentar carregar dados do Firebase
+            try {
+                const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
+                const snapshot = await window.firebaseGet(dataRef);
+                
+                if (snapshot.exists()) {
+                    initialData = snapshot.val();
+                    console.log("Dados carregados do Firebase");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firebase:", error);
+            }
+            
             // Preencher as tabelas com dados
             fillTables();
             
             // Inicializar gráficos
-            churnChartInstance = new Chart(document.getElementById('churnChart'), churnConfig);
-            evolutionChartInstance = new Chart(document.getElementById('evolutionChart'), evolutionConfig);
-            distributionChartInstance = new Chart(document.getElementById('distributionChart'), distributionConfig);
+            new Chart(document.getElementById('churnChart'), churnConfig);
+            new Chart(document.getElementById('evolutionChart'), evolutionConfig);
+            new Chart(document.getElementById('distributionChart'), distributionConfig);
             
             // Configurar modais e eventos
             setupModals();
             setupEventListeners();
-            
-            // Calcular totais dos sistemas
-            calculateSystemTotals();
-            
-            // Testar conexão com Firebase se estiver disponível
-            if (firebaseReady) {
-                await testFirebaseConnection();
-                
-                // Configurar listener em tempo real
-                setupRealtimeListener();
-                
-                // Tentar carregar dados do Firebase
-                try {
-                    const dataRef = window.firebaseRef(window.firebaseDatabase, 'current_data');
-                    const snapshot = await window.firebaseGet(dataRef);
-                    
-                    if (snapshot.exists()) {
-                        initialData = snapshot.val();
-                        console.log("Dados carregados do Firebase");
-                        fillTables();
-                        updateCharts();
-                        calculateSystemTotals();
-                    }
-                } catch (error) {
-                    console.error("Erro ao carregar dados do Firebase:", error);
-                }
-            }
         }
 
         function setupModals() {
