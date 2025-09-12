@@ -1416,7 +1416,9 @@
                 tbody.innerHTML = '';
                 
                 // Obter períodos para este sistema
-                const periodos = initialData[sistema] ? Object.keys(initialData[sistema]).sort() : [];
+                const periodos = initialData[sistema] 
+                ? Object.keys(initialData[sistema]).sort((a, b) => parsePeriod(a) - parsePeriod(b)) 
+                : [];
                 
                 // Adicionar cabeçalhos dos períodos
                 periodos.forEach(periodo => {
@@ -1507,11 +1509,11 @@
             
             Object.keys(initialData).forEach(sistema => {
                 if (initialData[sistema] && typeof initialData[sistema] === 'object') {
-                    const periodos = Object.keys(initialData[sistema]);
+                    const periodos = Object.keys(initialData[sistema] || {})
+                    .sort((a, b) => parsePeriod(a) - parsePeriod(b));
                     if (periodos.length > 0) {
-                        // Pegar o período mais recente
-                        const ultimoPeriodo = periodos.sort().pop();
-                        const dados = initialData[sistema][ultimoPeriodo];
+                    const ultimoPeriodo = periodos[periodos.length - 1]; // último após ordenação
+                    const dados = initialData[sistema][ultimoPeriodo];
                         
                         if (dados && dados.clientesAtivos) {
                             const clientes = parseInt(dados.clientesAtivos) || 0;
