@@ -1610,7 +1610,7 @@ function safeNumber(value) {
                 if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
                 const dados = initialData[sistema][ultimoPeriodoGlobal];
                 churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
-                churnCategoryData.push(parseFloat(dados.churn) || 0);
+                churnCategoryData.push(safeNumber(dados.churn));
                 }
             });
             
@@ -1628,10 +1628,10 @@ function safeNumber(value) {
             
             Object.keys(evolutionData).forEach(sistema => {
                 periodosOrdenados.forEach(periodo => {
-                    if (initialData[sistema] && initialData[sistema][periodo] && initialData[sistema][periodo].churn) {
-                        evolutionData[sistema].push(parseFloat(initialData[sistema][periodo].churn) || 0);
+                    if (initialData[sistema] && initialData[sistema][periodo]) {
+                    evolutionData[sistema].push(safeNumber(initialData[sistema][periodo].churn));
                     } else {
-                        evolutionData[sistema].push(null);
+                    evolutionData[sistema].push(null);
                     }
                 });
             });
@@ -1640,13 +1640,12 @@ function safeNumber(value) {
             let totalSolicitacoes = 0;
             let totalConfirmados = 0;
             let totalAutomaticos = 0;
-
             Object.keys(initialData).forEach(sistema => {
                 if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
                     const dados = initialData[sistema][ultimoPeriodoGlobal];
-                    totalSolicitacoes += parseInt(dados.solicitacoes) || 0;
-                    totalConfirmados += parseInt(dados.confirmados) || 0;
-                    totalAutomaticos += parseInt(dados.automaticos) || 0;
+                    totalSolicitacoes += safeNumber(dados.solicitacoes);
+                    totalConfirmados += safeNumber(dados.confirmados);
+                    totalAutomaticos += safeNumber(dados.automaticos);
                 }
             });
 
