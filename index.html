@@ -1617,10 +1617,10 @@
             // Processar dados para gráfico de distribuição
             Object.keys(initialData).forEach(sistema => {
                 if (initialData[sistema] && typeof initialData[sistema] === 'object') {
-                    const periodos = Object.keys(initialData[sistema]);
+                    const periodos = Object.keys(initialData[sistema]).sort((a, b) => parsePeriod(a) - parsePeriod(b));
                     if (periodos.length > 0) {
-                        const ultimoPeriodo = periodos.sort().pop();
-                        const dados = initialData[sistema][ultimoPeriodo];
+                    const ultimoPeriodo = periodos[periodos.length - 1]; // último após ordenação correta
+                    const dados = initialData[sistema][ultimoPeriodo];
                         
                         if (dados) {
                             distributionData.solicitacoes.push(parseInt(dados.solicitacoes) || 0);
