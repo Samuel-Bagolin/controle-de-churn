@@ -892,6 +892,17 @@
 
         let editingHeader = null;
 
+// Helper para converter valores nulos, vazios ou inválidos em 0
+function safeNumber(value) {
+    if (value === undefined || value === null) return 0;
+    if (typeof value === "string") {
+        const num = parseFloat(value.toString().replace(/[^\d,-]/g, "").replace(",", "."));
+        return isNaN(num) ? 0 : num;
+    }
+    if (typeof value === "number") return value;
+    return 0;
+}
+
         // Função auxiliar para converter o período (Mmm-AA) em um formato comparável para ordenação
         function parsePeriod(periodStr) {
             if (!periodStr || typeof periodStr !== 'string' || periodStr.indexOf('-') === -1) return 0;
