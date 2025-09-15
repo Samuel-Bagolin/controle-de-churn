@@ -1497,10 +1497,31 @@
                 });
             });
         }
+        
+// 🔹 Garante que todos os sistemas tenham o último período global com dados (mesmo que zerados)
+    function ensureAllSystemsHaveLastPeriod() {
+        const todosPeriodos = getAllPeriods();
+        if (todosPeriodos.length === 0) return; // não faz nada se não houver período
+        const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
 
-        // Função para atualizar resumo do dashboard
-function updateSummary() {
+    Object.keys(dataStructure).forEach(sistema => {
+        if (!initialData[sistema]) {
+            initialData[sistema] = {};
+        }
+        if (!initialData[sistema][ultimoPeriodoGlobal]) {
+            initialData[sistema][ultimoPeriodoGlobal] = {};
+            dataStructure[sistema].rows.forEach(row => {
+                initialData[sistema][ultimoPeriodoGlobal][row.key] = 0;
+              });
+           }
+       });
+    }
+    // Função para atualizar resumo do dashboard
+    function updateSummary() {
+       ensureAllSystemsHaveLastPeriod();
+
     // 🔹 Descobre o último período global (ex: Set-25)
+
     const todosPeriodos = getAllPeriods();
     const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
 
@@ -1550,6 +1571,7 @@ function updateSummary() {
 
         // Função para atualizar gráficos com dados do Firebase
         function updateCharts() {
+           ensureAllSystemsHaveLastPeriod();
             // Coletar dados para os gráficos
             const churnData = [];
             const labels = [];
