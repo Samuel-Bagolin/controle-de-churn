@@ -1572,23 +1572,19 @@
             // Este gráfico mostra a taxa de churn do último período disponível para cada categoria.
             // Se o usuário se refere a um gráfico de churn mensal, ele provavelmente está falando do evolutionChart.
             // Mantendo a lógica original para este gráfico, mas focando a ordenação no evolutionChart.
-            const churnCategoryLabels = [];
-            const churnCategoryData = [];
-            Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema] && typeof initialData[sistema] === 'object') {
-                    const periodos = Object.keys(initialData[sistema]);
-                    if (periodos.length > 0) {
-                        // Encontrar o último período para cada sistema para o gráfico de categoria
-                        const ultimoPeriodo = periodos.sort((a, b) => parsePeriod(a) - parsePeriod(b)).pop();
-                        const dados = initialData[sistema][ultimoPeriodo];
-                        
-                        if (dados && dados.churn) {
-                            churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
-                            churnCategoryData.push(parseFloat(dados.churn) || 0);
-                        }
-                    }
-                }
-            });
+         const todosPeriodos = getAllPeriods();
+         const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
+
+           // 🔹 Churn por Categoria (último mês global)
+          const churnCategoryLabels = [];
+          const churnCategoryData = [];
+             Object.keys(initialData).forEach(sistema => {
+             if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+                const dados = initialData[sistema][ultimoPeriodoGlobal];
+                churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
+                churnCategoryData.push(parseFloat(dados.churn) || 0);
+             }
+          });
             
             // Processar dados para gráfico de evolução
             const todosOsPeriodos = new Set();
@@ -1615,21 +1611,22 @@
             });
             
             // Processar dados para gráfico de distribuição
+            let totalSolicitacoes = 0;
+            let totalConfirmados = 0;
+            let totalAutomaticos = 0;
+
             Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema] && typeof initialData[sistema] === 'object') {
-                    const periodos = Object.keys(initialData[sistema]).sort((a, b) => parsePeriod(a) - parsePeriod(b));
-                    if (periodos.length > 0) {
-                    const ultimoPeriodo = periodos[periodos.length - 1]; // último após ordenação correta
-                    const dados = initialData[sistema][ultimoPeriodo];
-                        
-                        if (dados) {
-                            distributionData.solicitacoes.push(parseInt(dados.solicitacoes) || 0);
-                            distributionData.confirmados.push(parseInt(dados.confirmados) || 0);
-                            distributionData.automaticos.push(parseInt(dados.automaticos) || 0);
-                        }
-                    }
-                }
+               if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+                  const dados = initialData[sistema][ultimoPeriodoGlobal];
+                  totalSolicitacoes += parseInt(dados.solicitacoes) || 0;
+                  totalConfirmados += parseInt(dados.confirmados) || 0;
+                  totalAutomaticos += parseInt(dados.automaticos) || 0;
+               }
             });
+
+            distributionData.solicitacoes = [totalSolicitacoes];
+            distributionData.confirmados = [totalConfirmados];
+            distributionData.automaticos = [totalAutomaticos];
             
             // Atualizar gráficos
             if (charts.churnChart) {
