@@ -1523,13 +1523,13 @@ function safeNumber(value) {
             initialData[sistema][ultimoPeriodoGlobal] = {};
             dataStructure[sistema].rows.forEach(row => {
                 initialData[sistema][ultimoPeriodoGlobal][row.key] = 0;
-              });
-           }
-       });
+                });
+            }
+        });
     }
     // Função para atualizar resumo do dashboard
     function updateSummary() {
-       ensureAllSystemsHaveLastPeriod();
+        ensureAllSystemsHaveLastPeriod();
 
     // 🔹 Descobre o último período global (ex: Set-25)
 
@@ -1729,14 +1729,14 @@ function safeNumber(value) {
                         label: 'Taxa de Churn (%)',
                         data: [0, 0, 0],
                         backgroundColor: [
-                            'rgba(52, 152, 219, 0.7)',
-                            'rgba(46, 204, 113, 0.7)',
-                            'rgba(155, 89, 182, 0.7)'
+                            'rgba(15, 89, 219, 0.7)',
+                            'rgba(230, 204, 113, 0.7)',
+                            'rgba(230,126, 1, 0.7)'
                         ],
                         borderColor: [
-                            'rgba(52, 152, 219, 1)',
-                            'rgba(46, 204, 113, 1)',
-                            'rgba(155, 89, 182, 1)'
+                            'rgba(15, 89, 219, 0.7)',
+                            'rgba(230, 204, 113, 0.7)',
+                            'rgba(230, 126, 1, 1)'
                         ],
                         borderWidth: 2
                     }]
@@ -1765,22 +1765,22 @@ function safeNumber(value) {
                         {
                             label: 'Acessorias',
                             data: [],
-                            borderColor: 'rgba(52, 152, 219, 1)',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderColor: 'rgba(15, 89, 219, 0.7)',
+                            backgroundColor: 'rgba(15, 89, 219, 0.7)',
                             tension: 0.4
                         },
                         {
                             label: 'Sittax',
                             data: [],
-                            borderColor: 'rgba(46, 204, 113, 1)',
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderColor: 'rgba(230, 204, 113, 1)',
+                            backgroundColor: 'rgba(230, 204, 113, 1)',
                             tension: 0.4
                         },
                         {
                             label: 'Openix',
                             data: [],
-                            borderColor: 'rgba(155, 89, 182, 1)',
-                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            borderColor: 'rgba(230, 126, 1, 1)',
+                            backgroundColor: 'rgba(230, 126, 1, 1)',
                             tension: 0.4
                         }
                     ]
@@ -1809,17 +1809,17 @@ function safeNumber(value) {
             {
                 label: 'Solicitações',
                 data: [0, 0, 0], // começa vazio
-                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                backgroundColor: 'rgba(15, 89, 219, 0.7)',
             },
             {
                 label: 'Confirmados CS',
                 data: [0, 0, 0], // começa vazio
-                backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                backgroundColor: 'rgba(230, 204, 113, 1)',
             },
             {
                 label: 'Automáticos',
                 data: [0, 0, 0], // começa vazio
-                backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                backgroundColor: 'rgba(230, 126, 1, 1)',
             }
         ]
     },
