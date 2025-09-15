@@ -1582,77 +1582,87 @@ function safeNumber(value) {
 
         // Função para atualizar gráficos com dados do Firebase
         function updateCharts() {
-           ensureAllSystemsHaveLastPeriod();
-            // Coletar dados para os gráficos
-            const churnData = [];
-            const labels = [];
-            const evolutionData = {
-                accessorias: [],
-                sittax: [],
-                openix: []
-            };
-            const distributionData = {
-                solicitacoes: [],
-                confirmados: [],
-                automaticos: []
-            };
-            
-            // Processar dados para gráfico de churn por categoria
-            // Este gráfico mostra a taxa de churn do último período disponível para cada categoria.
-            // Se o usuário se refere a um gráfico de churn mensal, ele provavelmente está falando do evolutionChart.
-            // Mantendo a lógica original para este gráfico, mas focando a ordenação no evolutionChart.
-            const todosPeriodos = getAllPeriods();
-            const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
-            // 🔹 Churn por Categoria (último mês global)
-            const churnCategoryLabels = [];
-            const churnCategoryData = [];
-                Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
-                const dados = initialData[sistema][ultimoPeriodoGlobal];
-                churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
-                churnCategoryData.push(safeNumber(dados.churn));
-                }
-            });
-            
-            // Processar dados para gráfico de evolução
-            const todosOsPeriodos = new Set();
-            Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema]) {
-                    Object.keys(initialData[sistema]).forEach(periodo => {
-                        todosOsPeriodos.add(periodo);
-                    });
-                }
-            });
-            
-            const periodosOrdenados = Array.from(todosOsPeriodos).sort((a, b) => parsePeriod(a) - parsePeriod(b));
-            
-            Object.keys(evolutionData).forEach(sistema => {
-                periodosOrdenados.forEach(periodo => {
-                    if (initialData[sistema] && initialData[sistema][periodo]) {
-                    evolutionData[sistema].push(safeNumber(initialData[sistema][periodo].churn));
-                    } else {
-                    evolutionData[sistema].push(null);
-                    }
-                });
-            });
-            
-            // Processar dados para gráfico de distribuição
-            let totalSolicitacoes = 0;
-            let totalConfirmados = 0;
-            let totalAutomaticos = 0;
-            Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
-                    const dados = initialData[sistema][ultimoPeriodoGlobal];
-                    totalSolicitacoes += safeNumber(dados.solicitacoes);
-                    totalConfirmados += safeNumber(dados.confirmados);
-                    totalAutomaticos += safeNumber(dados.automaticos);
-                }
-            });
+    ensureAllSystemsHaveLastPeriod();
 
-            distributionData.solicitacoes = [totalSolicitacoes];
-            distributionData.confirmados = [totalConfirmados];
-            distributionData.automaticos = [totalAutomaticos];
-            
+    // 🔹 Descobre o último período global
+    const todosPeriodos = getAllPeriods();
+    const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
+
+    // -----------------------------
+    // 📊 Distribuição de Cancelamentos
+    // -----------------------------
+    const sistemas = ['accessorias', 'sittax', 'openix'];
+    const solicitacoesData = [];
+    const confirmadosData = [];
+    const automaticosData = [];
+
+    sistemas.forEach(sistema => {
+        const dados = initialData[sistema]?.[ultimoPeriodoGlobal] || {};
+        solicitacoesData.push(safeNumber(dados.solicitacoes));
+        confirmadosData.push(safeNumber(dados.confirmados));
+        automaticosData.push(safeNumber(dados.automaticos));
+    });
+
+    if (charts.distributionChart) {
+        charts.distributionChart.data.labels = ['Acessorias', 'Sittax', 'Openix'];
+        charts.distributionChart.data.datasets[0].data = solicitacoesData;
+        charts.distributionChart.data.datasets[1].data = confirmadosData;
+        charts.distributionChart.data.datasets[2].data = automaticosData;
+        charts.distributionChart.update();
+    }
+
+    // -----------------------------
+    // 📊 Taxa de Churn por Categoria (último período)
+    // -----------------------------
+    const churnCategoryLabels = [];
+    const churnCategoryData = [];
+    Object.keys(initialData).forEach(sistema => {
+        if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+            const dados = initialData[sistema][ultimoPeriodoGlobal];
+            churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
+            churnCategoryData.push(safeNumber(dados.churn));
+        }
+    });
+
+    if (charts.churnChart) {
+        charts.churnChart.data.labels = churnCategoryLabels;
+        charts.churnChart.data.datasets[0].data = churnCategoryData;
+        charts.churnChart.update();
+    }
+
+    // -----------------------------
+    // 📊 Evolução do Churn (linha do tempo)
+    // -----------------------------
+    const todosOsPeriodos = new Set();
+    Object.keys(initialData).forEach(sistema => {
+        if (initialData[sistema]) {
+            Object.keys(initialData[sistema]).forEach(periodo => {
+                todosOsPeriodos.add(periodo);
+            });
+        }
+    });
+
+    const periodosOrdenados = Array.from(todosOsPeriodos).sort((a, b) => parsePeriod(a) - parsePeriod(b));
+    const evolutionData = { accessorias: [], sittax: [], openix: [] };
+
+    Object.keys(evolutionData).forEach(sistema => {
+        periodosOrdenados.forEach(periodo => {
+            if (initialData[sistema] && initialData[sistema][periodo]) {
+                evolutionData[sistema].push(safeNumber(initialData[sistema][periodo].churn));
+            } else {
+                evolutionData[sistema].push(null);
+            }
+        });
+    });
+
+    if (charts.evolutionChart) {
+        charts.evolutionChart.data.labels = periodosOrdenados;
+        charts.evolutionChart.data.datasets[0].data = evolutionData.accessorias;
+        charts.evolutionChart.data.datasets[1].data = evolutionData.sittax;
+        charts.evolutionChart.data.datasets[2].data = evolutionData.openix;
+        charts.evolutionChart.update();
+    }
+}
             // Atualizar gráficos
             if (charts.churnChart) {
                 charts.churnChart.data.labels = churnCategoryLabels;
@@ -1675,7 +1685,7 @@ function safeNumber(value) {
                 charts.distributionChart.data.datasets[2].data = distributionData.automaticos;
                 charts.distributionChart.update();
             }
-        }
+            
 
         // Inicializar a aplicação quando a página carregar
         window.onload = async function() {
@@ -1792,41 +1802,41 @@ function safeNumber(value) {
 
             // Configuração do gráfico de distribuição
             const distributionConfig = {
-                type: 'bar',
-                data: {
-                    labels: ['Acessorias', 'Sittax', 'Openix'],
-                    datasets: [
-                        {
-                            label: 'Solicitações',
-                            data: [0, 0, 0],
-                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                        },
-                        {
-                            label: 'Confirmados CS',
-                            data: [0, 0, 0],
-                            backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                        },
-                        {
-                            label: 'Automáticos',
-                            data: [0, 0, 0],
-                            backgroundColor: 'rgba(155, 89, 182, 0.7)',
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Quantidade'
-                            }
-                        }
-                    }
+    type: 'bar',
+    data: {
+        labels: ['Acessorias', 'Openix', 'Sittax'],
+        datasets: [
+            {
+                label: 'Solicitações',
+                data: [0, 0, 0], // começa vazio
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+            },
+            {
+                label: 'Confirmados CS',
+                data: [0, 0, 0], // começa vazio
+                backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            },
+            {
+                label: 'Automáticos',
+                data: [0, 0, 0], // começa vazio
+                backgroundColor: 'rgba(155, 89, 182, 0.7)',
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Quantidade'
                 }
-            };
+            }
+        }
+    }
+};
 
             // Criar os gráficos
             charts.churnChart = new Chart(document.getElementById('churnChart'), churnConfig);
