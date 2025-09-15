@@ -1499,58 +1499,54 @@
         }
 
         // Função para atualizar resumo do dashboard
-        function updateSummary() {
-            let totalClientesAtivos = 0;
-            let totalChurn = 0;
-            let totalMontanteCancelado = 0;
-            let sistemasComDados = 0;
-            
-            const clientesPorSistema = {};
-            
-            Object.keys(initialData).forEach(sistema => {
-                if (initialData[sistema] && typeof initialData[sistema] === 'object') {
-                    const periodos = Object.keys(initialData[sistema] || {})
-                    .sort((a, b) => parsePeriod(a) - parsePeriod(b));
-                    if (periodos.length > 0) {
-                    const ultimoPeriodo = periodos[periodos.length - 1]; // último após ordenação
-                    const dados = initialData[sistema][ultimoPeriodo];
-                        
-                        if (dados && dados.clientesAtivos) {
-                            const clientes = parseInt(dados.clientesAtivos) || 0;
-                            totalClientesAtivos += clientes;
-                            clientesPorSistema[sistema] = clientes;
-                        }
-                        
-                        if (dados && dados.churn) {
-                            totalChurn += parseFloat(dados.churn) || 0;
-                            sistemasComDados++;
-                        }
-                        
-                        if (dados && dados.montanteCancelado) {
-                            const montante = parseFloat(dados.montanteCancelado.toString().replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
-                            totalMontanteCancelado += montante;
-                        }
-                    }
-                }
-            });
-            
-            // Atualizar elementos do DOM
-            document.getElementById('totalClientesAtivos').textContent = totalClientesAtivos.toLocaleString();
-            
-            const mediaChurn = sistemasComDados > 0 ? (totalChurn / sistemasComDados).toFixed(2) : '0.00';
-            document.getElementById('taxaChurnTotal').textContent = mediaChurn + '%';
-            
-            const mediaMontante = sistemasComDados > 0 ? (totalMontanteCancelado / sistemasComDados) : 0;
-            document.getElementById('valorMedioCancelado').textContent = 'R$ ' + mediaMontante.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            
-            // Atualizar detalhamento por sistema
-            const detalhamento = Object.keys(clientesPorSistema).map(sistema => {
-                const nome = sistema.charAt(0).toUpperCase() + sistema.slice(1);
-                return `${nome}: ${clientesPorSistema[sistema].toLocaleString()}`;
-            }).join(' | ');
-            
-            document.getElementById('clientesAtivosPorSistema').textContent = detalhamento || 'Nenhum dado disponível';
+function updateSummary() {
+    // 🔹 Descobre o último período global (ex: Set-25)
+    const todosPeriodos = getAllPeriods();
+    const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
+
+    let totalClientesAtivos = 0;
+    let totalChurn = 0;
+    let totalMontanteCancelado = 0;
+    let sistemasComDados = 0;
+    const clientesPorSistema = {};
+
+    // 🔹 Soma os dados de todos os sistemas no último período global
+    Object.keys(initialData).forEach(sistema => {
+        if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+            const dados = initialData[sistema][ultimoPeriodoGlobal];
+
+            if (dados.clientesAtivos) {
+                const clientes = parseInt(dados.clientesAtivos) || 0;
+                totalClientesAtivos += clientes;
+                clientesPorSistema[sistema] = clientes;
+            }
+
+            if (dados.churn) {
+                totalChurn += parseFloat(dados.churn) || 0;
+                sistemasComDados++;
+            }
+
+            if (dados.montanteCancelado) {
+                totalMontanteCancelado += parseFloat(
+                    dados.montanteCancelado.toString().replace(/[^\d,-]/g, "").replace(",", ".")
+                ) || 0;
+            }
         }
+    });
+
+    // 🔹 Atualiza os cards do dashboard
+    document.getElementById('totalClientesAtivos').textContent = totalClientesAtivos.toLocaleString();
+    const mediaChurn = sistemasComDados > 0 ? (totalChurn / sistemasComDados).toFixed(2) : "0.00";
+    document.getElementById('taxaChurnTotal').textContent = mediaChurn + "%";
+    const mediaMontante = sistemasComDados > 0 ? (totalMontanteCancelado / sistemasComDados) : 0;
+    document.getElementById('valorMedioCancelado').textContent = "R$ " + mediaMontante.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
+    // 🔹 Detalhamento por sistema
+    const detalhamento = Object.keys(clientesPorSistema)
+        .map(s => `${s.charAt(0).toUpperCase() + s.slice(1)}: ${clientesPorSistema[s].toLocaleString()}`)
+        .join(" | ");
+    document.getElementById('clientesAtivosPorSistema').textContent = detalhamento || "Nenhum dado disponível";
+}
 
         // Função para atualizar gráficos com dados do Firebase
         function updateCharts() {
@@ -1572,19 +1568,18 @@
             // Este gráfico mostra a taxa de churn do último período disponível para cada categoria.
             // Se o usuário se refere a um gráfico de churn mensal, ele provavelmente está falando do evolutionChart.
             // Mantendo a lógica original para este gráfico, mas focando a ordenação no evolutionChart.
-         const todosPeriodos = getAllPeriods();
-         const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
-
-           // 🔹 Churn por Categoria (último mês global)
-          const churnCategoryLabels = [];
-          const churnCategoryData = [];
-             Object.keys(initialData).forEach(sistema => {
-             if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+            const todosPeriodos = getAllPeriods();
+            const ultimoPeriodoGlobal = todosPeriodos[todosPeriodos.length - 1];
+            // 🔹 Churn por Categoria (último mês global)
+            const churnCategoryLabels = [];
+            const churnCategoryData = [];
+                Object.keys(initialData).forEach(sistema => {
+                if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
                 const dados = initialData[sistema][ultimoPeriodoGlobal];
                 churnCategoryLabels.push(sistema.charAt(0).toUpperCase() + sistema.slice(1));
                 churnCategoryData.push(parseFloat(dados.churn) || 0);
-             }
-          });
+                }
+            });
             
             // Processar dados para gráfico de evolução
             const todosOsPeriodos = new Set();
@@ -1596,8 +1591,6 @@
                 }
             });
             
-
-
             const periodosOrdenados = Array.from(todosOsPeriodos).sort((a, b) => parsePeriod(a) - parsePeriod(b));
             
             Object.keys(evolutionData).forEach(sistema => {
@@ -1616,12 +1609,12 @@
             let totalAutomaticos = 0;
 
             Object.keys(initialData).forEach(sistema => {
-               if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
-                  const dados = initialData[sistema][ultimoPeriodoGlobal];
-                  totalSolicitacoes += parseInt(dados.solicitacoes) || 0;
-                  totalConfirmados += parseInt(dados.confirmados) || 0;
-                  totalAutomaticos += parseInt(dados.automaticos) || 0;
-               }
+                if (initialData[sistema] && initialData[sistema][ultimoPeriodoGlobal]) {
+                    const dados = initialData[sistema][ultimoPeriodoGlobal];
+                    totalSolicitacoes += parseInt(dados.solicitacoes) || 0;
+                    totalConfirmados += parseInt(dados.confirmados) || 0;
+                    totalAutomaticos += parseInt(dados.automaticos) || 0;
+                }
             });
 
             distributionData.solicitacoes = [totalSolicitacoes];
