@@ -721,7 +721,7 @@
                             </div>
                             
                             <div class="form-group">
-                                <label for="data-montante">Média de mensalidade (R$):</label>
+                                <label for="data-montante">Montante Inventariado (R$):</label>
                                 <input type="text" id="data-montante" placeholder="Ex: 1.041.882,77" required>
                             </div>
                         </div>
@@ -756,7 +756,7 @@
                             </div>
                             
                             <div class="form-group">
-                                <label for="data-montante-cancelado">MRR Cancelado (R$):</label>
+                                <label for="data-montante-cancelado">Montante Cancelado (R$):</label>
                                 <input type="text" id="data-montante-cancelado" placeholder="Ex: 93.146,16" required>
                             </div>
                         </div>
@@ -930,39 +930,39 @@ function safeNumber(value) {
                 rows: [
                     { key: 'clientesAtivos', label: 'Clientes Ativos (mês anterior)', format: 'number' },
                     { key: 'novosContratos', label: 'Novos Contratos', format: 'number' },
-                    { key: 'Média de mensalidade', label: 'Média de mensalidade', format: 'currency' },
+                    { key: 'montante', label: 'Montante Inventariado', format: 'currency' },
                     { key: 'solicitacoes', label: 'Solicitações de Cancelamento', format: 'number' },
                     { key: 'confirmados', label: 'Cancelamentos Confirmados via CS', format: 'number' },
                     { key: 'automaticos', label: 'Cancelamentos Automáticos (inadimplência)', format: 'number' },
                     { key: 'cancelados', label: 'Clientes Cancelados e Inadimplência', format: 'number' },
                     { key: 'churn', label: '% Churn', format: 'percent' },
-                    { key: 'MRR Cancelado', label: 'MRR Cancelado', format: 'currency' }
+                    { key: 'montanteCancelado', label: 'Montante Cancelado', format: 'currency' }
                 ]
             },
             sittax: {
                 rows: [
                     { key: 'clientesAtivos', label: 'Clientes Ativos (mês anterior)', format: 'number' },
                     { key: 'novosContratos', label: 'Novos Contratos', format: 'number' },
-                    { key: 'Média de mensalidade', label: 'Média de mensalidade', format: 'currency' },
+                    { key: 'montante', label: 'Montante Inventariado', format: 'currency' },
                     { key: 'solicitacoes', label: 'Solicitações de Cancelamento', format: 'number' },
                     { key: 'confirmados', label: 'Cancelamentos Confirmados via CS', format: 'number' },
                     { key: 'automaticos', label: 'Cancelamentos Automáticos (inadimplência)', format: 'number' },
                     { key: 'cancelados', label: 'Clientes Cancelados e Inadimplência', format: 'number' },
                     { key: 'churn', label: '% Churn', format: 'percent' },
-                    { key: 'MRR Cancelado', label: 'MRR Cancelado', format: 'currency' }
+                    { key: 'montanteCancelado', label: 'Montante Cancelado', format: 'currency' }
                 ]
             },
             openix: {
                 rows: [
                     { key: 'clientesAtivos', label: 'Clientes Ativos (mês anterior)', format: 'number' },
                     { key: 'novosContratos', label: 'Novos Contratos', format: 'number' },
-                    { key: 'Média de mensalidade', label: 'Média de mensalidade', format: 'currency' },
+                    { key: 'montante', label: 'Montante Inventariado', format: 'currency' },
                     { key: 'solicitacoes', label: 'Solicitações de Cancelamento', format: 'number' },
                     { key: 'confirmados', label: 'Cancelamentos Confirmados via CS', format: 'number' },
                     { key: 'automaticos', label: 'Cancelamentos Automáticos (inadimplência)', format: 'number' },
                     { key: 'cancelados', label: 'Clientes Cancelados e Inadimplência', format: 'number' },
                     { key: 'churn', label: '% Churn', format: 'percent' },
-                    { key: 'MRR Cancelado', label: 'MRR Cancelado', format: 'currency' }
+                    { key: 'montanteCancelado', label: 'Montante Cancelado', format: 'currency' }
                 ]
             }
         };
